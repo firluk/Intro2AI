@@ -1,8 +1,3 @@
-class Suit:
-    name: None
-    icon: None
-
-
 def pull_suit():
     _suits = ["Spade", "Club", "Diamond", "Heart"]
     for i in range(4):
@@ -12,3 +7,8 @@ def pull_suit():
 def get_icon(suit):
     suits = {"Spade": "♠", "Club": "♣", "Diamond": "♦", "Heart": "♥"}
     return suits[suit]
+
+
+class Suit:
+    name: None
+    icon: None
