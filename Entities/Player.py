@@ -7,6 +7,7 @@ class Player:
         self.hand = Hand()
         self.name = n
         self.bank = b
+        self.bet = 0
 
     def draw_new_card_from_deck(self, deck):
         self.hand.add_card(deck.draw_card())

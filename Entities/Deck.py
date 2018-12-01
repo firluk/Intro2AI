@@ -4,26 +4,14 @@ from Entities.Card import Card
 from Entities.Suit import pull_suit
 
 
-def con_val(v):
-    values = {"10": "T", "11": "J", "12": "Q", "13": "K", "1": "A"}
-    v += 1
-    if 1 < v < 10:
-        return str(v)
-    else:
-        return values[str(v)]
-
-
 def get_deck():
     _deck = []
     for _suit in pull_suit():
-        for v in range(13):
-            _new_card = Card()
-            _new_card.suit = _suit
-            _new_card.val = con_val(v)
-            if v == 0:
-                _new_card.rank = 13
-            else:
-                _new_card.rank = v
+        for v in range(2, 15):
+            _new_card = Card(suit = _suit, rank = v)
+            # _new_card.suit = _suit
+            # _new_card.val = con_val(v)
+            # _new_card.rank = v
             _deck.append(_new_card)
     return _deck
 
