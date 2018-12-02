@@ -4,14 +4,14 @@ from Entities.Player import Player
 
 class Game:
 
-    def __init__(self, player_1_name = "Player 1", player_1_is_human = False,
-                 player_2_name = "Player 2", player_2_is_human = False):
+    def __init__(self, player_1_name = "Player 1", player_1_mode = "Random",
+                 player_2_name = "Player 2", player_2_mode = "Random"):
         """Create a new game
 
         :param player_1_name: player 1 name.
-        :param player_1_is_human: if a player is a human.
+        :param player_1_mode: if a player is a human.
         :param player_2_name: player 2 name.
-        :param player_2_is_human: if a player is a human.
+        :param player_2_mode: if a player is a human.
         """
         self.sb = 1
         self.bb = 2
@@ -21,8 +21,8 @@ class Game:
         self.done = False
         self._p1 = Player(player_1_name)
         self._p2 = Player(player_2_name)
-        self._p1.h = player_1_is_human
-        self._p2.h = player_2_is_human
+        self._p1.mode = player_1_mode
+        self._p2.mode = player_2_mode
         self.deck = Deck()
         self.p = [self._p1, self._p2]
 
@@ -36,7 +36,6 @@ class Game:
                 self.p[i].hand.to_string() + " and " + str(
                     self.p[i].bank) + " coins")
 
-        print(self.p[self.turn].name + " is small blind")
         print("The pot is", self.pot)
 
     def a_player(self):
@@ -474,7 +473,7 @@ class Game:
             # Iterate through all the kickers
             # It is important to the number of kickers differ based on
             # the type of hand
-            number_of_kickers = kicker.keys().__len__()
+            number_of_kickers = (kicker[list(kicker.keys())[0]]).__len__()
             for i in range(0, number_of_kickers):
                 high = 0
                 for k, v in kicker.items():
