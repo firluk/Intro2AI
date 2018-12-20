@@ -1,14 +1,6 @@
 from functools import total_ordering
 
 
-def decode(code):
-    """"returns card corresponding to encode"""
-    rank = code % 13
-    suit = int(code/13)
-
-    return Card()
-
-
 @total_ordering
 class Card:
     """The Card class
@@ -22,7 +14,7 @@ class Card:
         rank - 12
     """
 
-    def __init__(self, suit=None, rank=None):
+    def __init__(self, suit = None, rank = None):
         self.suit = suit
         """Suit of the card"""
         self.rank = rank
@@ -38,7 +30,8 @@ class Card:
         return self.suit == other.suit and self.rank == other.rank
 
     def __lt__(self, other):
-        return self.rank < other.rank or (self.rank == other.rank and self.suit < other.suit)
+        return self.rank < other.rank or (
+                self.rank == other.rank and self.suit < other.suit)
 
     # for readability in debugging
     def __str__(self):
@@ -52,10 +45,17 @@ class Card:
         return hash(self.to_string())
 
     def encode(self):
-        return (self.rank-2) + 13 * get_suit_value(self.suit)
+        return (self.rank - 2) + 13 * get_suit_value(self.suit)
 
     def to_string(self):
         return str(self.val) + get_icon(str(self.suit))
+
+    @staticmethod
+    def decode(cd):
+        """"returns card corresponding to encode"""
+        rank = cd % 13
+        suit = int(cd / 13)
+        return Card(suit, rank)
 
 
 def rank_to_value(v):
@@ -84,14 +84,16 @@ if __name__ == "__main__":
     sevenOfSpade = Card("Spade", 7)
     sixOfSpade = Card("Spade", 6)
     fiveOfSpade = Card("Spade", 5)
-    print(sorted([fiveOfSpade, sixOfSpade, aceOfSpade, aceOfHeart, twoOfSpade, sevenOfSpade]))
+    print(sorted([fiveOfSpade, sixOfSpade, aceOfSpade, aceOfHeart, twoOfSpade,
+                  sevenOfSpade]))
 
 # testing the sorting
 if __name__ == "__main__":
-    codes = []
+    t_codes = []
     from Entities import Deck
-    for card in Deck.get_deck():
-        code = card.encode()
-        codes.append(code)
-    codes.sort()
-    print(codes)
+
+    for t_card in Deck.get_deck():
+        t_code = t_card.encode()
+        t_codes.append(t_code)
+    t_codes.sort()
+    print(t_codes)
