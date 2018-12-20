@@ -1,5 +1,12 @@
-from Entities.Suit import get_icon
 from functools import total_ordering
+
+
+def decode(code):
+    """"returns card corresponding to encode"""
+    rank = code % 13
+    suit = int(code/13)
+
+    return Card()
 
 
 @total_ordering
@@ -28,7 +35,7 @@ class Card:
 
     # the order implemented and equality for sorting and hashing
     def __eq__(self, other):
-        return not self.suit == other and self.rank == other.rank
+        return self.suit == other.suit and self.rank == other.rank
 
     def __lt__(self, other):
         return self.rank < other.rank or (self.rank == other.rank and self.suit < other.suit)
@@ -44,6 +51,9 @@ class Card:
     def __hash__(self):
         return hash(self.to_string())
 
+    def encode(self):
+        return (self.rank-2) + 13 * get_suit_value(self.suit)
+
     def to_string(self):
         return str(self.val) + get_icon(str(self.suit))
 
@@ -56,6 +66,16 @@ def rank_to_value(v):
         return values[str(v)]
 
 
+def get_icon(suit):
+    suits = {"Spade": "♠", "Club": "♣", "Diamond": "♦", "Heart": "♥"}
+    return suits[suit]
+
+
+def get_suit_value(suit):
+    suits = {"Spade": 0, "Club": 1, "Diamond": 2, "Heart": 3}
+    return suits[suit]
+
+
 # testing the sorting
 if __name__ == "__main__":
     aceOfHeart = Card("Heart", 14)
@@ -65,3 +85,13 @@ if __name__ == "__main__":
     sixOfSpade = Card("Spade", 6)
     fiveOfSpade = Card("Spade", 5)
     print(sorted([fiveOfSpade, sixOfSpade, aceOfSpade, aceOfHeart, twoOfSpade, sevenOfSpade]))
+
+# testing the sorting
+if __name__ == "__main__":
+    codes = []
+    from Entities import Deck
+    for card in Deck.get_deck():
+        code = card.encode()
+        codes.append(code)
+    codes.sort()
+    print(codes)

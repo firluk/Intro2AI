@@ -38,12 +38,8 @@ class PokerEnv(gym.Env):
                  However, official evaluations of your agent are not allowed to
                  use this for learning.
         """
-        self._take_action(action)
-        self.status = self.env.step()
-        reward = self._get_reward()
-        ob = self.env.getState()
-        episode_over = self.status != hfo_py.IN_GAME
-        return ob, reward, episode_over, {}
+        pass
+        # return ob, reward, episode_over, info
 
     def _reset(self):
         pass
@@ -55,10 +51,18 @@ class PokerEnv(gym.Env):
         pass
 
     def _get_reward(self):
-        """ Reward is given for XY. """
-        if self.status == FOOBAR:
-            return 1
-        elif self.status == ABC:
-            return self.somestate ** 2
-        else:
-            return 0
+        pass
+
+    def encode(self, hand, small_blind):
+        sorted_hand = sorted(hand.cards, reverse=True)
+        coef_blind = 52*52 if small_blind else 0
+        self.encoded = coef_blind + sorted_hand[0].encode() * 52 + sorted_hand[1].encode()
+        # self.encoded = str(sorted(hand.cards)) + str(small_blind)
+
+    def decode(self, code):
+        if code > 52*52:
+            small_blind = True
+            code -= 52*52
+        # encode = 52*code1 + encode
+        # % 52
+        return small_blind, hand
