@@ -14,7 +14,7 @@ class Card:
         rank - 12
     """
 
-    def __init__(self, suit = None, rank = None):
+    def __init__(self, suit=None, rank=None):
         self.suit = suit
         """Suit of the card"""
         self.rank = rank
@@ -35,26 +35,23 @@ class Card:
 
     # for readability in debugging
     def __str__(self):
-        return self.to_string()
+        return str(self.val) + get_icon(str(self.suit))
 
     def __repr__(self):
         return self.__str__()
 
     # for hashing to sets and dictionaries
     def __hash__(self):
-        return hash(self.to_string())
+        return hash(self.__str__())
 
     def encode(self):
         return (self.rank - 2) + 13 * get_suit_value(self.suit)
 
-    def to_string(self):
-        return str(self.val) + get_icon(str(self.suit))
-
     @staticmethod
     def decode(cd):
         """"returns card corresponding to encode"""
-        rank = cd % 13
-        suit = int(cd / 13)
+        rank = cd % 13 + 2
+        suit = get_suit_from_value(int(cd / 13))
         return Card(suit, rank)
 
 
@@ -76,6 +73,11 @@ def get_suit_value(suit):
     return suits[suit]
 
 
+def get_suit_from_value(suit_code):
+    suits = {0: "Spade", 1: "Club", 2: "Diamond", 3: "Heart"}
+    return suits[suit_code]
+
+
 # testing the sorting
 if __name__ == "__main__":
     aceOfHeart = Card("Heart", 14)
@@ -95,5 +97,8 @@ if __name__ == "__main__":
     for t_card in Deck.get_deck():
         t_code = t_card.encode()
         t_codes.append(t_code)
+        decoded_card = Card.decode(t_code)
+        if t_card != decoded_card:
+            print(str(t_card) + " " + str(decoded_card))
     t_codes.sort()
     print(t_codes)

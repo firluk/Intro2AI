@@ -1,7 +1,7 @@
 import numpy as np
 
-from Entities import Hand
 from Entities import Card
+from Entities import Hand
 
 
 class State:
@@ -53,6 +53,7 @@ if __name__ == "__main__":
                     dictionary_based_q_table[code] = (0, 0)
 
     import sys
+
     print("size dict " + str(sys.getsizeof(dictionary_based_q_table)))
     table_based_q_table = np.zeros([52 * 52 * 2, 2])
 

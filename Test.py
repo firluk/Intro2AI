@@ -4,7 +4,7 @@ from Entities.Card import Card
 from Entities.Hand import Hand
 
 
-def generate_tp(val = 15, val2 = 15, val3 = 15):
+def generate_tp(val=15, val2=15, val3=15):
     """Generate two pairs 5 cards hand"""
     suits = ["Spade", "Club", "Diamond", "Heart"]
     h = Hand()
@@ -35,7 +35,7 @@ def generate_tp(val = 15, val2 = 15, val3 = 15):
     return h
 
 
-def generate_tok(val = 15, val2 = 15, val3 = 15):
+def generate_tok(val=15, val2=15, val3=15):
     """Generate three of a kind 5 cards hand"""
     suits = ["Spade", "Club", "Diamond", "Heart"]
     choice = random.choice(suits)
@@ -54,7 +54,7 @@ def generate_tok(val = 15, val2 = 15, val3 = 15):
     return h
 
 
-def generate_fh(val = 15, val2 = 15):
+def generate_fh(val=15, val2=15):
     """Generate Full house 5 cards hand"""
     suits = ["Spade", "Club", "Diamond", "Heart"]
     choice = random.choice(suits)

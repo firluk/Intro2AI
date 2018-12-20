@@ -4,8 +4,8 @@ from Entities.Player import Player
 
 class Game:
 
-    def __init__(self, player_1_name = "Player 1", player_1_mode = "Random",
-                 player_2_name = "Player 2", player_2_mode = "Random"):
+    def __init__(self, player_1_name="Player 1", player_1_mode="Random",
+                 player_2_name="Player 2", player_2_mode="Random"):
         """Create a new game
 
         :param player_1_name: player 1 name.
@@ -33,8 +33,7 @@ class Game:
         for i in range(self.p.__len__()):
             print(
                 "Player " + str(i + 1) + "- " + self.p[i].name + ", Cards : " +
-                self.p[i].hand.to_string() + " and " + str(
-                    self.p[i].bank) + " coins")
+                str(self.p[i].hand) + " and " + str(self.p[i].bank) + " coins")
 
         print("The pot is", self.pot)
 

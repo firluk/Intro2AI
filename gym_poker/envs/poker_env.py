@@ -1,8 +1,6 @@
 import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
-from Entities import Card
 
+from Entities import Card
 from Entities.Hand import Hand
 
 
@@ -47,7 +45,7 @@ class PokerEnv(gym.Env):
     def _reset(self):
         pass
 
-    def _render(self, mode = 'human', close = False):
+    def _render(self, mode='human', close=False):
         pass
 
     def _take_action(self, action):
@@ -56,9 +54,8 @@ class PokerEnv(gym.Env):
     def _get_reward(self):
         pass
 
-    # noinspection PyAttributeOutsideInit
     def encode(self, hand, small_blind):
-        sorted_hand = sorted(hand.cards, reverse = True)
+        sorted_hand = sorted(hand.cards, reverse=True)
         coef_blind = 52 * 52 if small_blind else 0
         self.encoded = coef_blind + sorted_hand[0].encode() * 52 + sorted_hand[
             1].encode()
