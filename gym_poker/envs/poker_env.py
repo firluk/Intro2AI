@@ -1,4 +1,5 @@
 import gym
+from gym import spaces
 
 from Entities import Card
 from Entities.Hand import Hand
@@ -8,6 +9,8 @@ class PokerEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self):
+        self.observation_space = spaces.Tuple([spaces.Discrete(52), spaces.Discrete(52), spaces.Discrete(2)])
+        self.action_space = spaces.Discrete(2)
         pass
 
     def _step(self, action):
@@ -70,9 +73,19 @@ class PokerEnv(gym.Env):
             code -= 52 * 52
         # encode = 52*code1 + encode
         # % 52
-        card2 = Card.decode(code % 52)
+        card2 = Card.Card.decode(code % 52)
         code = code - (code % 52)
-        card1 = Card.decode(int(code / 52))
+        card1 = Card.Card.decode(int(code / 52))
+        hand.add_card(card1)
+        hand.add_card(card2)
+        return small_blind, hand
+
+    @staticmethod
+    def decode_from_tuple(observation_state):
+        small_blind = (observation_state[2] == 1)
+        card1 = Card.Card.decode(observation_state[0])
+        card2 = Card.Card.decode(observation_state[1])
+        hand = Hand()
         hand.add_card(card1)
         hand.add_card(card2)
         return small_blind, hand
