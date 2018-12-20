@@ -1,6 +1,8 @@
 from Entities.Suit import get_icon
+from functools import total_ordering
 
 
+@total_ordering
 class Card:
     """The Card class
 
@@ -13,7 +15,7 @@ class Card:
         rank - 12
     """
 
-    def __init__(self, suit = None, rank = None):
+    def __init__(self, suit=None, rank=None):
         self.suit = suit
         """Suit of the card"""
         self.rank = rank
@@ -23,6 +25,24 @@ class Card:
         else:
             self.val = None
         """Literal value of the card"""
+
+    # the order implemented and equality for sorting and hashing
+    def __eq__(self, other):
+        return not self.suit == other and self.rank == other.rank
+
+    def __lt__(self, other):
+        return self.rank < other.rank or (self.rank == other.rank and self.suit < other.suit)
+
+    # for readability in debugging
+    def __str__(self):
+        return self.to_string()
+
+    def __repr__(self):
+        return self.__str__()
+
+    # for hashing to sets and dictionaries
+    def __hash__(self):
+        return hash(self.to_string())
 
     def to_string(self):
         return str(self.val) + get_icon(str(self.suit))
@@ -34,3 +54,14 @@ def rank_to_value(v):
         return str(v)
     else:
         return values[str(v)]
+
+
+# testing the sorting
+if __name__ == "__main__":
+    aceOfHeart = Card("Heart", 14)
+    aceOfSpade = Card("Spade", 14)
+    twoOfSpade = Card("Spade", 2)
+    sevenOfSpade = Card("Spade", 7)
+    sixOfSpade = Card("Spade", 6)
+    fiveOfSpade = Card("Spade", 5)
+    print(sorted([fiveOfSpade, sixOfSpade, aceOfSpade, aceOfHeart, twoOfSpade, sevenOfSpade]))
