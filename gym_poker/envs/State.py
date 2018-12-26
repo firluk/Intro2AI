@@ -1,6 +1,6 @@
 import numpy as np
 
-from Entities import Hand
+from entities import Hand
 
 
 class State:

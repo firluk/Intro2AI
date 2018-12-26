@@ -1,7 +1,7 @@
 import random
 
-from Entities.Card import Card
-from Entities.Hand import Hand
+from entities.card import Card
+from entities.hand import Hand
 
 
 def generate_tp(val=15, val2=15, val3=15):

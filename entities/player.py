@@ -1,4 +1,4 @@
-from Entities.Hand import Hand
+from entities.hand import Hand
 
 
 class Player:

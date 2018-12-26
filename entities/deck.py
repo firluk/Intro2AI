@@ -1,6 +1,6 @@
 import random
 
-from Entities.Card import Card
+from entities.card import Card
 
 
 def get_deck():

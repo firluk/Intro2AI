@@ -92,9 +92,9 @@ if __name__ == "__main__":
 # testing the sorting
 if __name__ == "__main__":
     t_codes = []
-    from Entities import Deck
+    from entities import deck
 
-    for t_card in Deck.get_deck():
+    for t_card in deck.get_deck():
         t_code = t_card.encode()
         t_codes.append(t_code)
         decoded_card = Card.decode(t_code)

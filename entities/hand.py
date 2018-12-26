@@ -22,14 +22,14 @@ class Hand:
 
 # testing the sorting
 if __name__ == "__main__":
-    from Entities import Card
+    from entities import card
 
-    aceOfHeart = Card.Card("Heart", 14)
-    aceOfSpade = Card.Card("Spade", 14)
-    twoOfSpade = Card.Card("Spade", 2)
-    sevenOfSpade = Card.Card("Spade", 7)
-    sixOfSpade = Card.Card("Spade", 6)
-    fiveOfSpade = Card.Card("Spade", 5)
+    aceOfHeart = card.Card("Heart", 14)
+    aceOfSpade = card.Card("Spade", 14)
+    twoOfSpade = card.Card("Spade", 2)
+    sevenOfSpade = card.Card("Spade", 7)
+    sixOfSpade = card.Card("Spade", 6)
+    fiveOfSpade = card.Card("Spade", 5)
     hand = Hand()
     hand.add_card(aceOfSpade)
     hand.add_card(sixOfSpade)
