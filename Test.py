@@ -2,6 +2,7 @@ import random
 
 from entities.card import Card
 from entities.hand import Hand
+from entities.qtabletrainer import QTableTrainer
 
 
 def generate_tp(val=15, val2=15, val3=15):
@@ -73,3 +74,8 @@ def generate_fh(val=15, val2=15):
         if not (su.__eq__(choice) or su.__eq__(choice2)):
             h.add_card(Card(su, val2))
     return h
+
+
+if __name__ == "__main__":
+    qt = QTableTrainer(50)
+    qt.train_agent()

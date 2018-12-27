@@ -1,5 +1,8 @@
-from entities.card import Card
-from entities.hand import Hand
+from random import random
+
+import numpy as np
+
+from gym_poker.envs import PokerEnv
 
 
 class QtableNPC:
@@ -10,46 +13,28 @@ class QtableNPC:
       52 ,   52 ,   2  ,     4
     """
 
-    def __init__(self):
-        n_s = 52 * 52 * 2 * 4
-        n_a = 2
-        # This will initialize the starting Q-Table to incentify the agent to always go all in
-        # The table stores only rewards, nothing more
-        self.qt = {s: {a: -1 if a == 0 else 1 for a in range(n_a)} for s in range(n_s)}
-        self.state = 0
+    def __init__(self, num_of_chips, qtable, st=None):
+        """Constructs an agent for poker game
 
-    @staticmethod
-    def encode(hand, small_blind, _num_of_chips, initial_num_of_chips):
-        """Encoding and decoding code was lifted from openAI taxi gym"""
-        # Sort hand and extract cards
-        _sorted_hand = sorted(hand.cards, reverse=True)
-        _card1 = _sorted_hand[0].encode()
-        _card2 = _sorted_hand[1].encode()
-        # Calculate coefficient of number of chips
-        _coef_chips = 2 * _num_of_chips // initial_num_of_chips
-        # Encode
-        encoded = _card2
-        encoded *= 52
-        encoded += _card1
-        encoded *= 2
-        encoded += small_blind
-        encoded *= 4
-        encoded += _coef_chips
-        return encoded
+        :param num_of_chips: How many starting chips each player has
+        :param qtable: Table for decision making
+        :param st: Initial state (default none)
+        """
+        self.qt = qtable
 
-    @staticmethod
-    def decode(_code):
-        """Encoding and decoding code was lifted from openAI taxi gym"""
-        _out = [_code % 4]
-        _code = _code // 4
-        _out.append(_code % 2)
-        _code = _code // 2
-        _card1 = Card.decode(_code % 52)
-        _code = _code // 52
-        _card2 = Card.decode(_code)
-        assert 0 <= _code < 52
-        _hand = Hand()
-        _hand.add_card(_card1)
-        _hand.add_card(_card2)
-        _out.append(_hand)
-        return _out
+        self.state = st
+        self.bank_size = num_of_chips
+
+    def make_a_move(self, pl, is_sb):
+        """Makes a decision whenever to fold or play
+
+        :param pl: Player object
+        :param is_sb: Is the player small blind or not?
+        :return action 0 for fold 1 for play:
+        """
+        observation_code = PokerEnv.encode(pl.hand, is_sb, pl.bank, self.bank_size)
+        action = np.argmax(self.qt[observation_code])
+        # (bluff) If the decision is to fold give a 10% chance that will go all in instead
+        if action == 0 and random() > 0.9:
+            action = 1
+        return action

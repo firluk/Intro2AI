@@ -6,9 +6,9 @@ from entities import *
 class PokerEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self):
-        self.g = Game("P1", "Qtable", "P2", "Qtable")
-        self.reset()
+    def __init__(self, num_of_chips):
+        self._g = None
+        self.ob = self.reset(num_of_chips)
 
     def step(self, action):
         """Step
@@ -22,57 +22,64 @@ class PokerEnv(gym.Env):
         :param action: [small blind action, big blind action]
                 0 if fold, 1 otherwise
          """
+        sb_player = self._g.sb_player()
+        bb_player = self._g.bb_player()
         if action[0]:
             # Small blind went all in
+            self._g.player_all_in(sb_player)
             if action[1]:
                 # BB called
+                self._g.player_call(bb_player, sb_player.bet)
                 # Need to compare hands
                 for c in range(5):
-                    new_card = g.deck.draw_card()
-                    for ep in self.g.p:
+                    new_card = self._g.deck.draw_card()
+                    for ep in self._g.p:
                         ep.hand.add_card(new_card)
-                for pl in self.g.p:
+                for pl in self._g.p:
                     pl.hand.sort()
                 # get the absolute score of the hand and the best five cards
                 results = []
-                for ep in self.g.p:
+                for ep in self._g.p:
                     results.append(Game.score(ep.hand))
                 # select the winner
                 winners = Game.determine_winner(results)
                 # award the pot to the winner
                 if winners.__len__() > 1:
                     # split the pot
-                    self.g.split_the_pot()
+                    self._g.split_the_pot()
                     # Give both players small reward
                     rewards = [1, 1]
                 else:
                     rewards = []
                     # Reward the winner with chips won
-                    rewards.insert(winners[0], self.g.p[winners[0]].bet)
+                    rewards.insert(winners[0], self._g.p[winners[0]].bet)
                     # Penalty the loser with chips lost
-                    rewards.insert(1 - winners[0], -self.g.p[1 - winners[0]].bet)
+                    rewards.insert(1 - winners[0], -self._g.p[1 - winners[0]].bet)
                     # Actually transfer the chips between players
-                    self.g.player_won(self.g.p[winners[0]])
+                    self._g.player_won(self._g.p[winners[0]])
             else:
                 # BB folded
                 # Reward SB with amount won
                 # Penalty BB by amount lost
-                rewards = [self.g.pot, -self.g.bb_player().bet]
+                rewards = [self._g.pot, -bb_player.bet]
                 # Transfer chips to SB
-                self.g.bb_player().bank += self.g.pot
+                sb_player.bank += self._g.pot
         else:
             # Small blind folded
             # Reward BB with 0 since their move didn't matter
             # Penalty SB by amount lost
-            rewards = [-self.g.sb_player().bet, 0]
+            rewards = [-sb_player.bet, 0]
             # Transfer chips to BB
-            self.g.bb_player().bank += self.g.pot
+            bb_player.bank += self._g.pot
         # Change who is SB
-        self.g.sb = 1 - self.g.sb
-        self.g.new_step()
-        self.g.players_draw_cards()
-        ob = [self.g.sb_player(), self.g.bb_player()]
-        return ob, rewards
+        self._g.sb = 1 - self._g.sb
+        self._g.new_step()
+        self._g.place_blinds()
+        self._g.players_draw_cards()
+        if self._g.a_player().bank <= 0 or self._g.na_player().bank <= 0:
+            self._g.done = True
+        self.ob = [sb_player, bb_player]
+        return self.ob, rewards, self._g.done
 
     def reset(self, bank=50):
         """Initial setup for training
@@ -80,16 +87,16 @@ class PokerEnv(gym.Env):
         :param bank : initial bank size
         :returns [small blind player, big blind player]
         """
-        self.g = Game("P1", "Qtable", "P2", "Qtable", bank)
-        self.g.place_blinds()
-        self.g.players_draw_cards()
+        self._g = Game("P1", "Qtable", "P2", "Qtable", bank)
+        self._g.place_blinds()
+        self._g.players_draw_cards()
         # Return observation
         # [ Small Blind Player, Big Blind Player ]
-        ob = [self.g.sb_player(), self.g.bb_player()]
-        return ob
+        self.ob = [self._g.sb_player(), self._g.bb_player()]
+        return self.ob
 
     def render(self, mode='human'):
-        self.g.render_game()
+        self._g.render_game()
 
     @staticmethod
     def encode(hand, small_blind, _num_of_chips, initial_num_of_chips):
