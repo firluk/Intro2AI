@@ -1,11 +1,11 @@
-from Entities.Deck import Deck
-from Entities.Player import Player
+from entities.deck import Deck
+from entities.player import Player
 
 
 class Game:
 
-    def __init__(self, player_1_name = "Player 1", player_1_mode = "Random",
-                 player_2_name = "Player 2", player_2_mode = "Random"):
+    def __init__(self, player_1_name="Player 1", player_1_mode="Random",
+                 player_2_name="Player 2", player_2_mode="Random", bank=10):
         """Create a new game
 
         :param player_1_name: player 1 name.
@@ -13,14 +13,15 @@ class Game:
         :param player_2_name: player 2 name.
         :param player_2_mode: if a player is a human.
         """
-        self.sb = 1
-        self.bb = 2
+        self.sb_chips = 1
+        self.bb_chips = 2
+        self.sb = 0
         self.turn = 0
         self.step = 0
         self.pot = 0
         self.done = False
-        self._p1 = Player(player_1_name)
-        self._p2 = Player(player_2_name)
+        self._p1 = Player(player_1_name, bank)
+        self._p2 = Player(player_2_name, bank)
         self._p1.mode = player_1_mode
         self._p2.mode = player_2_mode
         self.deck = Deck()
@@ -29,22 +30,33 @@ class Game:
     def next_player(self):
         self.turn = 1 - self.turn
 
+    def end_round(self):
+        self.sb = 1 - self.sb
+        self.turn = self.sb
+
     def render_game(self):
         for i in range(self.p.__len__()):
             print(
                 "Player " + str(i + 1) + "- " + self.p[i].name + ", Cards : " +
-                self.p[i].hand.to_string() + " and " + str(
-                    self.p[i].bank) + " coins")
+                str(self.p[i].hand) + " and " + str(self.p[i].bank) + " coins")
 
         print("The pot is", self.pot)
 
     def a_player(self):
-        """Returns the active player"""
+        """Returns the player that have the turn now"""
         return self.p[self.turn]
 
     def na_player(self):
-        """Returns the non active player"""
+        """Returns the player that does not have the turn now"""
         return self.p[1 - self.turn]
+
+    def sb_player(self):
+        """Return the small blind player"""
+        return self.p[self.sb]
+
+    def bb_player(self):
+        """Return the big blind player"""
+        return self.p[1 - self.sb]
 
     def player_all_in(self, p):
         """Adds all players money to the pot"""
@@ -90,11 +102,11 @@ class Game:
         """
         sb = self.a_player()
         bb = self.na_player()
-        sb.bet = self.sb
-        bb.bet = self.bb
-        sb.bank -= self.sb
-        bb.bank -= self.bb
-        self.pot += self.sb + self.bb
+        sb.bet = self.sb_chips
+        bb.bet = self.bb_chips
+        sb.bank -= self.sb_chips
+        bb.bank -= self.bb_chips
+        self.pot += self.sb_chips + self.bb_chips
 
     def players_draw_cards(self):
         """Draws two cards for each player"""

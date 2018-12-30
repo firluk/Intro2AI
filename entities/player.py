@@ -1,9 +1,9 @@
-from Entities.Hand import Hand
+from entities.hand import Hand
 
 
 class Player:
 
-    def __init__(self, n, b = 10):
+    def __init__(self, n, b=10):
         self.hand = Hand()
         self.name = n
         self.bank = b
