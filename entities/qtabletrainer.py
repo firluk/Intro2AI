@@ -33,7 +33,7 @@ class QTableTrainer:
 
     def train_agent(self):
         env = PokerEnv(self.nc)
-        cycles = 52 * 52 * 2 * 4 * 100
+        cycles = 500000  # 5000000 is one hour
         for i in range(cycles):  # replace later with 52 * 52 * 2 * 4 * 100
             done = False
             while not done:

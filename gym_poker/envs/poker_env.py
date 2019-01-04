@@ -39,7 +39,7 @@ class PokerEnv(gym.Env):
                     pl.hand.sort()
                 # get the absolute score of the hand and the best five cards
                 results = []
-                for ep in self._g.p:
+                for ep in [sb_player, bb_player]:
                     results.append(Game.score(ep.hand))
                 # select the winner
                 winners = Game.determine_winner(results)
