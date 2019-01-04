@@ -33,7 +33,8 @@ class QTableTrainer:
 
     def train_agent(self):
         env = PokerEnv(self.nc)
-        for i in range(100):  # replace later with 52 * 52 * 2 * 4 * 100
+        cycles = 52 * 52 * 2 * 4 * 100
+        for i in range(cycles):  # replace later with 52 * 52 * 2 * 4 * 100
             done = False
             while not done:
                 player1 = env.ob[0]
@@ -54,4 +55,5 @@ class QTableTrainer:
                 self.qt[p2_state][action2] = new_value
             if i % 1000 == 0:
                 np.savez('Qtable/qtablenpc.npz', qtable=self.qt)
+                print(cycles - i)
             env.reset(self.nc)

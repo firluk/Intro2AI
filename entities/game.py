@@ -378,6 +378,9 @@ class Game:
             flush = True
             score = 5
             final_hand = [card.rank for card in hand.cards if card.suit == key]
+            # make sure there are only 5 cards
+            while final_hand.__len__() > 5:
+                final_hand.pop(0)
 
             # ------------------------------------------------
             # -----Checking for Straight & Royal Flush--------

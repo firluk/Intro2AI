@@ -77,5 +77,5 @@ def generate_fh(val=15, val2=15):
 
 
 if __name__ == "__main__":
-    qt = QTableTrainer(50)
+    qt = QTableTrainer(10)
     qt.train_agent()
