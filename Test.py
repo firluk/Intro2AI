@@ -1,8 +1,11 @@
 import random
 
+import numpy as np
+
 from entities.card import Card
 from entities.hand import Hand
 from entities.qtabletrainer import QTableTrainer
+from gym_poker.envs import PokerEnv
 
 
 def generate_tp(val=15, val2=15, val3=15):
@@ -76,6 +79,44 @@ def generate_fh(val=15, val2=15):
     return h
 
 
-if __name__ == "__main__":
+def train_agent():
     qt = QTableTrainer(10)
     qt.train_agent()
+
+
+def print_qt():
+    _c = False
+    _qt = None
+    try:
+        # Load Qtable from file
+        with np.load('Qtable/qtablenpc.npz') as data:
+            _qt = data['qtable']
+        _c = True
+    except IOError:
+        print("error loading qtable")
+    if not _c:
+        exit(0)
+    _h = Hand()
+    _nc = 10
+    _res = np.zeros(8, dtype=int)
+    for i in range(52):
+        print("Cards  --  big blind  --  money ranges  --  small blind  -- money ranges")
+        for j in range(i + 1, 52):
+            _h.add_card(Card.decode(i))
+            _h.add_card(Card.decode(j))
+            for i1 in range(2):
+                for j1 in range(4):
+                    _res[i1 * 4 + j1] = PokerEnv.encode(_h, i1, 4 + (j1 * 5), _nc)
+            _s = _h.__str__() + " - "
+            for i2 in range(8):
+                _s += str.format('{:.2f}', _qt[_res[i2]][0])
+                _s += "|"
+                _s += str.format('{:.2f}', _qt[_res[i2]][1])
+                _s += " -- "
+            print(_s)
+            _h.clear_hand()
+
+
+if __name__ == "__main__":
+    # train_agent()
+    print_qt()
