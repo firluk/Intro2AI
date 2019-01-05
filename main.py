@@ -98,8 +98,11 @@ def resolve_hands(p, g):
 
 
 def main():
+    # [0] player1 won accumulator, [1] player2 won accumulator
+    # stats = [0, 0] WIP
     for games in range(10):
-        game = Game("Tegra", player_types["r"], "Firluk", player_types["r"])
+        # q - indicate q-table, indicate
+        game = Game("Tegra", player_types["q"], "Firluk", player_types["r"])
         while not game.done:
             if game.a_player().bank <= 0 or game.na_player().bank <= 0:
                 game.done = True

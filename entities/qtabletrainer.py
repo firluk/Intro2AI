@@ -34,10 +34,10 @@ class QTableTrainer:
     def train_agent(self):
         env = PokerEnv(self.nc)
         alpha = 0.1
-
+        epsilon_min = 0.1
         cycles = 5000000  # 5000000 is one hour
         for i in range(cycles):  # replace later with 52 * 52 * 2 * 4 * 100
-            epsilon = (cycles - i) / cycles
+            epsilon = max(epsilon_min, (cycles - i) / cycles)
             done = False
             while not done:
                 player1 = env.ob[0]
@@ -58,9 +58,9 @@ class QTableTrainer:
                 observation, rewards, done = env.step([action1, action2])
                 # if the game was lost completely, the punishment is multiplied
                 if done:
-                    for r in rewards:
+                    for (ind, r) in enumerate(rewards):
                         if r < 0:
-                            r = -20
+                            rewards[ind] = -20
                 p1_reward, p2_reward = rewards[0], rewards[1]
                 old_value = self.qt[p1_state][action1]
                 new_value = (1 - alpha) * old_value + alpha * p1_reward
