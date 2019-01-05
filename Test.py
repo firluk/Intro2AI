@@ -118,5 +118,5 @@ def print_qt():
 
 
 if __name__ == "__main__":
-    train_agent()
-    # print_qt()
+    # train_agent()
+    print_qt()

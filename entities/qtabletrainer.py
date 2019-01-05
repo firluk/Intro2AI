@@ -56,8 +56,12 @@ class QTableTrainer:
                     action2 = self.agent.make_a_move(player2, 1)
 
                 observation, rewards, done = env.step([action1, action2])
+                # if the game was lost completely, the punishment is multiplied
+                if done:
+                    for r in rewards:
+                        if r < 0:
+                            r = -20
                 p1_reward, p2_reward = rewards[0], rewards[1]
-
                 old_value = self.qt[p1_state][action1]
                 new_value = (1 - alpha) * old_value + alpha * p1_reward
                 self.qt[p1_state][action1] = new_value
