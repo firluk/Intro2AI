@@ -35,6 +35,6 @@ class QtableNPC:
         observation_code = PokerEnv.encode(pl.hand, is_sb, pl.bank, self.bank_size)
         action = np.argmax(self.qt[observation_code])
         # (bluff) If the decision is to fold give a 10% chance that will go all in instead
-        if action == 0 and random() > 0.9:
-            action = 1
+        """if action == 0 and random() > 0.9:
+            action = 1"""
         return action
