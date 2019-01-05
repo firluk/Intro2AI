@@ -1,3 +1,5 @@
+from random import random
+
 import numpy as np
 
 from entities.qtablenpc import QtableNPC
@@ -13,9 +15,7 @@ class QTableTrainer:
         """
 
     def __init__(self, num_of_chips):
-        self.alpha = 0.1
-        self.gamma = 0.6
-        self.epsilon = 0.1
+
         n_s = 52 * 52 * 2 * 4
         n_a = 2
         try:
@@ -33,25 +33,37 @@ class QTableTrainer:
 
     def train_agent(self):
         env = PokerEnv(self.nc)
-        cycles = 52 * 52 * 2 * 4 * 500  # 5000000 is one hour
+        alpha = 0.1
+
+        cycles = 5000000  # 5000000 is one hour
         for i in range(cycles):  # replace later with 52 * 52 * 2 * 4 * 100
+            epsilon = (cycles - i) / cycles
             done = False
             while not done:
                 player1 = env.ob[0]
                 player2 = env.ob[1]
                 p1_state = PokerEnv.encode(player1.hand, 0, player1.bank, self.nc)
                 p2_state = PokerEnv.encode(player2.hand, 1, player2.bank, self.nc)
-                action1 = self.agent.make_a_move(player1, 0)
-                action2 = self.agent.make_a_move(player2, 1)
+
+                # exploitation vs exploration
+                if random() < epsilon:
+                    action1 = 0 if random() > 0.5 else 1
+                else:
+                    action1 = self.agent.make_a_move(player1, 0)
+                if random() < epsilon:
+                    action2 = 0 if random() > 0.5 else 1
+                else:
+                    action2 = self.agent.make_a_move(player2, 1)
+
                 observation, rewards, done = env.step([action1, action2])
                 p1_reward, p2_reward = rewards[0], rewards[1]
 
                 old_value = self.qt[p1_state][action1]
-                new_value = (1 - self.alpha) * old_value + self.alpha * p1_reward
+                new_value = (1 - alpha) * old_value + alpha * p1_reward
                 self.qt[p1_state][action1] = new_value
 
                 old_value = self.qt[p2_state][action2]
-                new_value = (1 - self.alpha) * old_value + self.alpha * p2_reward
+                new_value = (1 - alpha) * old_value + alpha * p2_reward
                 self.qt[p2_state][action2] = new_value
             if i % 1000 == 0:
                 np.savez('Qtable/qtablenpc.npz', qtable=self.qt)
