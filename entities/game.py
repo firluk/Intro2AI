@@ -1,5 +1,8 @@
+import numpy as np
+
 from entities.deck import Deck
 from entities.player import Player
+from entities.qtablenpc import QtableNPC
 
 
 class Game:
@@ -24,6 +27,9 @@ class Game:
         self._p2 = Player(player_2_name, bank)
         self._p1.mode = player_1_mode
         self._p2.mode = player_2_mode
+        if "Qtable" in (player_1_mode, player_2_mode):
+            with np.load('Qtable/qtablenpc.npz') as data:
+                self.qt = QtableNPC(bank, data['qtable'])
         self.deck = Deck()
         self.p = [self._p1, self._p2]
 

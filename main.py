@@ -19,7 +19,7 @@ def small_blind(p, game):
     elif p.mode.__eq__(player_types["r"]):
         move = RandomNPC.make_a_move()
     elif p.mode.__eq__(player_types["q"]):
-        pass
+        move = game.qt.make_a_move(p, True)
     else:
         pass
     if not move:
@@ -45,7 +45,7 @@ def big_blind(p, g):
     elif p.mode.__eq__(player_types["r"]):
         move = RandomNPC.make_a_move()
     elif p.mode.__eq__(player_types["q"]):
-        pass
+        move = g.qt.make_a_move(p, False)
     else:
         pass
     if not move:
@@ -99,8 +99,8 @@ def resolve_hands(p, g):
 
 def main():
     # [0] player1 won accumulator, [1] player2 won accumulator
-    # stats = [0, 0] WIP
-    for games in range(10):
+    stats = [0, 0]
+    for games in range(100):
         # q - indicate q-table, indicate
         game = Game("Tegra", player_types["q"], "Firluk", player_types["r"])
         while not game.done:
@@ -126,6 +126,10 @@ def main():
 
         # region End game
         if game.done:
+            if game.p[0].bank > game.p[1].bank:
+                stats[0] += 1
+            else:
+                stats[1] += 1
             for pl in game.p:
                 pl.bank += pl.bet
                 pl.bet = 0
@@ -138,6 +142,9 @@ def main():
             print(s)
 
         # endregion
+        print(stats)
+    print("In total: Player1 has won " + str(stats[0]))
+    print("In total: Player2 has won " + str(stats[1]))
 
 
 if __name__ == "__main__":
