@@ -1,5 +1,6 @@
 from entities.game import Game
 from entities.randomnpc import RandomNPC
+from gym_poker.envs.poker_env import PokerEnv
 
 player_types = {"h": "Human", "r": "Random", "q": "Qtable"}
 
@@ -19,7 +20,7 @@ def small_blind(p, game):
     elif p.mode.__eq__(player_types["r"]):
         move = RandomNPC.make_a_move()
     elif p.mode.__eq__(player_types["q"]):
-        move = game.qt.make_a_move(p, True)
+        move = game.qagent.make_a_move(PokerEnv.encode(p.hand, 0, p.bank, game.bank))
     else:
         pass
     if not move:
@@ -31,7 +32,7 @@ def small_blind(p, game):
         return True
 
 
-def big_blind(p, g):
+def big_blind(p, game):
     move = False
     if p.mode.__eq__(player_types["h"]):
         retry = True
@@ -41,11 +42,11 @@ def big_blind(p, g):
                 move = False
             elif inp == "c":
                 retry = False
-        g.render_game()
+        game.render_game()
     elif p.mode.__eq__(player_types["r"]):
         move = RandomNPC.make_a_move()
     elif p.mode.__eq__(player_types["q"]):
-        move = g.qt.make_a_move(p, False)
+        move = game.qagent.make_a_move(PokerEnv.encode(p.hand, 1, p.bank, game.bank))
     else:
         pass
     if not move:
@@ -53,7 +54,7 @@ def big_blind(p, g):
         return False
     else:
         print(p.name, "calls")
-        g.player_call(p, g.na_player().bet)
+        game.player_call(p, game.na_player().bet)
         return True
 
 
@@ -100,7 +101,7 @@ def resolve_hands(p, g):
 def main():
     # [0] player1 won accumulator, [1] player2 won accumulator
     stats = [0, 0]
-    for games in range(100):
+    for games in range(1000):
         # q - indicate q-table, indicate
         game = Game("Tegra", player_types["q"], "Firluk", player_types["r"])
         while not game.done:

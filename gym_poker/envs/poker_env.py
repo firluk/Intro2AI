@@ -50,25 +50,26 @@ class PokerEnv(gym.Env):
                     # Give both players small reward
                     rewards = [1, 1]
                 else:
-                    rewards = []
-                    # Reward the winner with chips won
-                    rewards.insert(winners[0], self._g.p[winners[0]].bet)
-                    # Penalty the loser with chips lost
-                    rewards.insert(1 - winners[0], -self._g.p[1 - winners[0]].bet)
                     # Actually transfer the chips between players
                     self._g.player_won(self._g.p[winners[0]])
+                    rewards = []
+                    # Reward the winner with chips won
+                    rewards.insert(winners[0], self._g.p[winners[0]].bank)
+                    # Penalty the loser with chips lost
+                    rewards.insert(1 - winners[0], self._g.p[1 - winners[0]].bank)
+
             else:
                 # BB folded
                 # Reward SB with amount won
-                # Penalty BB by amount lost
-                rewards = [self._g.pot, -bb_player.bet]
                 # Transfer chips to SB
                 sb_player.bank += self._g.pot
+                # Penalty BB by amount lost
+                rewards = [sb_player.bank, bb_player.bank]
         else:
             # Small blind folded
             # Reward BB with 0 since their move didn't matter
             # Penalty SB by amount lost
-            rewards = [-sb_player.bet, 0]
+            rewards = [sb_player.bank, 0]
             # Transfer chips to BB
             bb_player.bank += self._g.pot
         # Change who is SB

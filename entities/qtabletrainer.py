@@ -3,7 +3,7 @@ from random import random
 import numpy as np
 
 from entities.qtablenpc import QtableNPC
-from gym_poker.envs import PokerEnv
+from gym_poker.envs.poker_env import PokerEnv
 
 
 class QTableTrainer:
@@ -16,28 +16,17 @@ class QTableTrainer:
 
     def __init__(self, num_of_chips):
 
-        n_s = 52 * 52 * 2 * 4
-        n_a = 2
-        try:
-            # Load Qtable from file
-            with np.load('Qtable/qtablenpc.npz') as data:
-                self.qt = data['qtable']
-        except IOError:
-            # File does not exists
-            self.qt = np.zeros([n_s, n_a])
-            # Make the agent prefer to go all in and not to fold
-            self.qt[range(n_s), 0] = -1
-            self.qt[range(n_s), 1] = 1
-        self.agent = QtableNPC(num_of_chips, self.qt)
+        self.agent = QtableNPC()
         self.nc = num_of_chips
 
     def train_agent(self):
         env = PokerEnv(self.nc)
-        alpha = 0.6
+        alpha = 0.1
         epsilon_min = 0.1
-        cycles = 5000000  # 5000000 is one hour
+        epsilon = 0.1
+        cycles = 1000000  # 5000000 is one hour
         for i in range(cycles):  # replace later with 52 * 52 * 2 * 4 * 100
-            epsilon = max(epsilon_min, (cycles - i) / cycles)
+            # epsilon = max(epsilon_min, (cycles - i) / cycles)
             done = False
             while not done:
                 player1 = env.ob[0]
@@ -50,11 +39,11 @@ class QTableTrainer:
                 if random() < epsilon:
                     action1 = 0 if random() > 0.5 else 1
                 else:
-                    action1 = self.agent.make_a_move(player1, 0)
+                    action1 = self.agent.make_a_move(PokerEnv.encode(player1.hand, 0, player1.bank, self.nc))
                 if random() < epsilon:
                     action2 = 0 if random() > 0.5 else 1
                 else:
-                    action2 = self.agent.make_a_move(player2, 1)
+                    action2 = self.agent.make_a_move(PokerEnv.encode(player2.hand, 1, player2.bank, self.nc))
 
                 observation, rewards, done = env.step([action1, action2])
 
@@ -63,17 +52,18 @@ class QTableTrainer:
                     for (ind, r) in enumerate(rewards):
                         if r < 0:
                             rewards[ind] = -20
+                            rewards[1 - ind] = 40
 
                 p1_reward, p2_reward = rewards[0], rewards[1]
-                old_value = self.qt[p1_state][action1]
+                old_value = self.agent.qt[p1_state][action1]
                 new_value = (1 - alpha) * old_value + alpha * p1_reward
-                self.qt[p1_state][action1] = new_value
+                self.agent.qt[p1_state][action1] = new_value
                 # if player 1 folded, nothing to learn here
                 if p2_reward != 0:
-                    old_value = self.qt[p2_state][action2]
+                    old_value = self.agent.qt[p2_state][action2]
                     new_value = (1 - alpha) * old_value + alpha * p2_reward
-                    self.qt[p2_state][action2] = new_value
-            if i % 1000 == 0:
-                np.savez('Qtable/qtablenpc.npz', qtable=self.qt)
+                    self.agent.qt[p2_state][action2] = new_value
+            if i % 10000 == 0:
+                np.savez('Qtable/qtablenpc.npz', qtable=self.agent.qt)
                 print(cycles - i)
             env.reset(self.nc)

@@ -5,7 +5,7 @@ import numpy as np
 from entities.card import Card
 from entities.hand import Hand
 from entities.qtabletrainer import QTableTrainer
-from gym_poker.envs import PokerEnv
+from gym_poker.envs.poker_env import PokerEnv
 
 
 def generate_tp(val=15, val2=15, val3=15):
@@ -119,4 +119,4 @@ def print_qt():
 
 if __name__ == "__main__":
     train_agent()
-    # print_qt()
+    print_qt()
