@@ -27,8 +27,8 @@ class QtableNPC:
                 # File does not exists
                 self.qt = np.zeros([n_s, n_a])
                 # Make the agent prefer to go all in and not to fold
-                self.qt[range(n_s), 0] = 10
-                self.qt[range(n_s), 1] = 10
+                self.qt[range(n_s), 0] = -1
+                self.qt[range(n_s), 1] = 1
 
     def make_a_move(self, observation_code):
         """Makes a decision whenever to fold or play

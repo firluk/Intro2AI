@@ -23,10 +23,9 @@ class QTableTrainer:
         env = PokerEnv(self.nc)
         alpha = 0.1
         epsilon_min = 0.1
-        epsilon = 0.1
         cycles = 1000000  # 5000000 is one hour
         for i in range(cycles):  # replace later with 52 * 52 * 2 * 4 * 100
-            # epsilon = max(epsilon_min, (cycles - i) / cycles)
+            epsilon = max(epsilon_min, (cycles - i) / cycles)
             done = False
             while not done:
                 player1 = env.ob[0]
@@ -35,7 +34,7 @@ class QTableTrainer:
                 p2_state = PokerEnv.encode(player2.hand, 1, player2.bank, self.nc)
 
                 # exploitation vs exploration
-
+                """
                 if random() < epsilon:
                     action1 = 0 if random() > 0.5 else 1
                 else:
@@ -44,6 +43,19 @@ class QTableTrainer:
                     action2 = 0 if random() > 0.5 else 1
                 else:
                     action2 = self.agent.make_a_move(PokerEnv.encode(player2.hand, 1, player2.bank, self.nc))
+                """
+                if i % 2 == 0:
+                    if random() < epsilon:
+                        action1 = 0 if random() > 0.5 else 1
+                    else:
+                        action1 = self.agent.make_a_move(PokerEnv.encode(player1.hand, 0, player1.bank, self.nc))
+                    action2 = 0 if random() > 0.5 else 1
+                else:
+                    action1 = 0 if random() > 0.5 else 1
+                    if random() < epsilon:
+                        action2 = 0 if random() > 0.5 else 1
+                    else:
+                        action2 = self.agent.make_a_move(PokerEnv.encode(player2.hand, 1, player2.bank, self.nc))
 
                 observation, rewards, done = env.step([action1, action2])
 
@@ -52,7 +64,7 @@ class QTableTrainer:
                     for (ind, r) in enumerate(rewards):
                         if r < 0:
                             rewards[ind] = -20
-                            rewards[1 - ind] = 40
+                            rewards[1 - ind] = 20
 
                 p1_reward, p2_reward = rewards[0], rewards[1]
                 old_value = self.agent.qt[p1_state][action1]
