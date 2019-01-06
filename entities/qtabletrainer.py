@@ -33,7 +33,7 @@ class QTableTrainer:
 
     def train_agent(self):
         env = PokerEnv(self.nc)
-        alpha = 0.1
+        alpha = 0.6
         epsilon_min = 0.1
         cycles = 5000000  # 5000000 is one hour
         for i in range(cycles):  # replace later with 52 * 52 * 2 * 4 * 100
@@ -46,6 +46,7 @@ class QTableTrainer:
                 p2_state = PokerEnv.encode(player2.hand, 1, player2.bank, self.nc)
 
                 # exploitation vs exploration
+
                 if random() < epsilon:
                     action1 = 0 if random() > 0.5 else 1
                 else:
@@ -56,19 +57,22 @@ class QTableTrainer:
                     action2 = self.agent.make_a_move(player2, 1)
 
                 observation, rewards, done = env.step([action1, action2])
+
                 # if the game was lost completely, the punishment is multiplied
                 if done:
                     for (ind, r) in enumerate(rewards):
                         if r < 0:
                             rewards[ind] = -20
+
                 p1_reward, p2_reward = rewards[0], rewards[1]
                 old_value = self.qt[p1_state][action1]
                 new_value = (1 - alpha) * old_value + alpha * p1_reward
                 self.qt[p1_state][action1] = new_value
-
-                old_value = self.qt[p2_state][action2]
-                new_value = (1 - alpha) * old_value + alpha * p2_reward
-                self.qt[p2_state][action2] = new_value
+                # if player 1 folded, nothing to learn here
+                if p2_reward != 0:
+                    old_value = self.qt[p2_state][action2]
+                    new_value = (1 - alpha) * old_value + alpha * p2_reward
+                    self.qt[p2_state][action2] = new_value
             if i % 1000 == 0:
                 np.savez('Qtable/qtablenpc.npz', qtable=self.qt)
                 print(cycles - i)
