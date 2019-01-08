@@ -1,11 +1,13 @@
 from entities.game import Game
+from entities.neuralnetworknpc import NeuralNetworkNPC
 from entities.randomnpc import RandomNPC
+from gym_poker.envs.neural_net_poker_env import NeuralNetPokerEnv
 from gym_poker.envs.poker_env import PokerEnv
 
-player_types = {"h": "Human", "r": "Random", "q": "Qtable"}
+player_types = {"h": "Human", "r": "Random", "q": "Qtable", "n": "NeuralNet"}
 
 
-def small_blind(p, game):
+def small_blind(p, game, neural_model=None):
     move = False
     if p.mode.__eq__(player_types["h"]):
         retry = True
@@ -21,6 +23,8 @@ def small_blind(p, game):
         move = RandomNPC.make_a_move()
     elif p.mode.__eq__(player_types["q"]):
         move = game.qagent.make_a_move(PokerEnv.encode(p.hand, 0, p.bank, game.bank))
+    elif p.mode.__eq__(player_types["n"]):
+        move = neural_model.make_a_move(NeuralNetPokerEnv.encode(p.hand, 0, p.bank, game.bank))
     else:
         pass
     if not move:
@@ -32,7 +36,7 @@ def small_blind(p, game):
         return True
 
 
-def big_blind(p, game):
+def big_blind(p, game, neural_model=None):
     move = False
     if p.mode.__eq__(player_types["h"]):
         retry = True
@@ -47,6 +51,8 @@ def big_blind(p, game):
         move = RandomNPC.make_a_move()
     elif p.mode.__eq__(player_types["q"]):
         move = game.qagent.make_a_move(PokerEnv.encode(p.hand, 1, p.bank, game.bank))
+    elif p.mode.__eq__(player_types["n"]):
+        move = neural_model.make_a_move(NeuralNetPokerEnv.encode(p.hand, 1, p.bank, game.bank))
     else:
         pass
     if not move:
@@ -96,6 +102,57 @@ def resolve_hands(p, g):
     else:
         print(p[winners[0]].name, "has taken the pot")
         g.player_won(p[winners[0]])
+
+
+def neural_test():
+    # [0] player1 won accumulator, [1] player2 won accumulator
+    stats = [0, 0]
+    neural_npc = NeuralNetworkNPC()
+    for games in range(100):
+        # q - indicate q-table, indicate
+        game = Game("Tegra", player_types["n"], "Firluk", player_types["r"])
+        while not game.done:
+            if game.a_player().bank <= 0 or game.na_player().bank <= 0:
+                game.done = True
+                break
+            else:
+                game.place_blinds()
+            game.players_draw_cards()
+            game.render_game()
+            print(game.p[game.turn].name + " is small blind")
+            result = small_blind(game.p[game.turn], game, neural_model=neural_npc)
+            game.next_player()
+            if result:
+                result = big_blind(game.p[game.turn], game, neural_model=neural_npc)
+                if result:
+                    resolve_hands(game.p, game)
+                else:
+                    game.opponent_folded(game.na_player())
+            else:
+                game.opponent_folded(game.a_player())
+            game.new_step()
+
+        # region End game
+        if game.done:
+            if game.p[0].bank > game.p[1].bank:
+                stats[0] += 1
+            else:
+                stats[1] += 1
+            for pl in game.p:
+                pl.bank += pl.bet
+                pl.bet = 0
+            if game.a_player().bank <= 0:
+                pl = game.na_player()
+            else:
+                pl = game.a_player()
+            s = pl.name + " has won the game with "
+            s += str(pl.bank) + " coins"
+            print(s)
+
+        # endregion
+        print(stats)
+    print("In total: Player1 has won " + str(stats[0]))
+    print("In total: Player2 has won " + str(stats[1]))
 
 
 def main():
@@ -149,4 +206,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    neural_test()

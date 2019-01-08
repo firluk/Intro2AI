@@ -1,10 +1,15 @@
 import random
+from pprint import pprint
 
 import numpy as np
 
 from entities.card import Card
+from entities.deck import get_deck
 from entities.hand import Hand
+from entities.neuralnetworknpc import NeuralNetworkNPC
+from entities.neuralnetworktrainer import NeuralNetworkTrainer
 from entities.qtabletrainer import QTableTrainer
+from gym_poker.envs.neural_net_poker_env import NeuralNetPokerEnv
 from gym_poker.envs.poker_env import PokerEnv
 
 
@@ -117,6 +122,43 @@ def print_qt():
             _h.clear_hand()
 
 
+def train_neural_network():
+    nn = NeuralNetworkTrainer(10)
+    nn.train_agent()
+
+
+def print_neural_network_predictions():
+    ordered_deck = get_deck()
+    nn_npc = NeuralNetworkNPC()
+    output = [None] * (ordered_deck.__len__() ** 2) * 4 * 2
+    ind = 0
+    for card1 in ordered_deck:
+        for card2 in ordered_deck:
+            hand = Hand()
+            hand.cards = [card1, card2]
+            initial_num_chips = 20
+            for money_bin in range(4):
+                for sb in range(2):
+                    prediction = (nn_npc.model.predict(
+                        NeuralNetPokerEnv.encode(hand, sb, int(initial_num_chips / 4) * money_bin, initial_num_chips)))
+                    # print('{},{},{},{},{},{}'.format(card1, card2, money_bin, "SB" if sb else "BB", prediction,
+                    #                                  np.argmax(np.array(prediction))))
+                    output[ind] = [str(card1),
+                                   str(card2),
+                                   str(money_bin),
+                                   "SB" if sb else "BB",
+                                   str(prediction),
+                                   str(np.argmax(np.array(prediction)))]
+                    ind += 1
+    import json
+    pprint(output)
+    with open('data.json', 'w', encoding='utf8') as outfile:
+        data = (json.dumps(output, sort_keys=True, ensure_ascii=False))
+        outfile.write(data)
+
+
 if __name__ == "__main__":
-    train_agent()
-    print_qt()
+    # train_agent()
+    # print_qt()
+    train_neural_network()
+    print_neural_network_predictions()
