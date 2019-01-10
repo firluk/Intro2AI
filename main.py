@@ -1,5 +1,8 @@
+from random import random
+
 from entities.game import Game
 from entities.neuralnetworknpc import NeuralNetworkNPC
+from entities.qtablenpc import QtableNPC
 from entities.randomnpc import RandomNPC
 from gym_poker.envs.neural_net_poker_env import NeuralNetPokerEnv
 from gym_poker.envs.poker_env import PokerEnv
@@ -7,7 +10,7 @@ from gym_poker.envs.poker_env import PokerEnv
 player_types = {"h": "Human", "r": "Random", "q": "Qtable", "n": "NeuralNet"}
 
 
-def small_blind(p, game, neural_model=None):
+def small_blind(p, game, neural_model_npc=None, q_table_npc=None):
     move = False
     if p.mode.__eq__(player_types["h"]):
         retry = True
@@ -22,9 +25,9 @@ def small_blind(p, game, neural_model=None):
     elif p.mode.__eq__(player_types["r"]):
         move = RandomNPC.make_a_move()
     elif p.mode.__eq__(player_types["q"]):
-        move = game.qagent.make_a_move(PokerEnv.encode(p.hand, 0, p.bank, game.bank))
+        move = q_table_npc.make_a_move(PokerEnv.encode(p.hand, 0, p.bank, game.bank))
     elif p.mode.__eq__(player_types["n"]):
-        move = neural_model.make_a_move(NeuralNetPokerEnv.encode(p.hand, 0, p.bank, game.bank))
+        move = neural_model_npc.make_a_move(NeuralNetPokerEnv.encode(p.hand, 0, p.bank, game.bank))
     else:
         pass
     if not move:
@@ -36,7 +39,7 @@ def small_blind(p, game, neural_model=None):
         return True
 
 
-def big_blind(p, game, neural_model=None):
+def big_blind(p, game, neural_model_npc=None, q_table_npc=None):
     move = False
     if p.mode.__eq__(player_types["h"]):
         retry = True
@@ -50,9 +53,9 @@ def big_blind(p, game, neural_model=None):
     elif p.mode.__eq__(player_types["r"]):
         move = RandomNPC.make_a_move()
     elif p.mode.__eq__(player_types["q"]):
-        move = game.qagent.make_a_move(PokerEnv.encode(p.hand, 1, p.bank, game.bank))
+        move = q_table_npc.make_a_move(PokerEnv.encode(p.hand, 1, p.bank, game.bank))
     elif p.mode.__eq__(player_types["n"]):
-        move = neural_model.make_a_move(NeuralNetPokerEnv.encode(p.hand, 1, p.bank, game.bank))
+        move = neural_model_npc.make_a_move(NeuralNetPokerEnv.encode(p.hand, 1, p.bank, game.bank))
     else:
         pass
     if not move:
@@ -106,11 +109,14 @@ def resolve_hands(p, g):
 
 def neural_test():
     # [0] player1 won accumulator, [1] player2 won accumulator
-    stats = [0, 0]
+    stats = [0, 0, ]
     neural_npc = NeuralNetworkNPC()
-    for games in range(100):
+    q_table_npc = QtableNPC()
+    for games in range(1000):
         # q - indicate q-table, indicate
-        game = Game("Tegra", player_types["n"], "Firluk", player_types["r"])
+        game = Game("Tegra", player_types["r"], "Firluk", player_types["n"])
+        if random() > 0.5:
+            game.end_round()
         while not game.done:
             if game.a_player().bank <= 0 or game.na_player().bank <= 0:
                 game.done = True
@@ -120,10 +126,10 @@ def neural_test():
             game.players_draw_cards()
             game.render_game()
             print(game.p[game.turn].name + " is small blind")
-            result = small_blind(game.p[game.turn], game, neural_model=neural_npc)
+            result = small_blind(game.p[game.turn], game, neural_model_npc=neural_npc, q_table_npc=q_table_npc)
             game.next_player()
             if result:
-                result = big_blind(game.p[game.turn], game, neural_model=neural_npc)
+                result = big_blind(game.p[game.turn], game, neural_model_npc=neural_npc, q_table_npc=q_table_npc)
                 if result:
                     resolve_hands(game.p, game)
                 else:
