@@ -127,5 +127,5 @@ def train_neural_network():
 if __name__ == "__main__":
     # train_agent()
     # print_qt()
-    train_neural_network()
-    print_neural_network_predictions("Q_after_training")
+    # train_neural_network()
+    print_neural_network_predictions(filename="./NeuralNet/Q_after_training.json", verbose=True)

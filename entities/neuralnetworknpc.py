@@ -82,30 +82,38 @@ def print_neural_network_predictions(model=None, filename=None, verbose=False):
         nn_npc = NeuralNetworkNPC(model)
         model = nn_npc.model
 
-    output = [None] * (ordered_deck.__len__() ** 2) * 4 * 2
+    output = []
+
     ind = 0
     for card1 in ordered_deck:
         for card2 in ordered_deck:
-            hand = Hand()
-            hand.cards = [card1, card2]
-            initial_num_chips = 20
-            for money_bin in range(4):
-                for sb in range(2):
-                    prediction = (model.predict(
-                        NeuralNetPokerEnv.encode(hand, sb, int(initial_num_chips / 4) * money_bin, initial_num_chips)))
-                    # print('{},{},{},{},{},{}'.format(card1, card2, money_bin, "SB" if sb else "BB", prediction,
-                    #                                  np.argmax(np.array(prediction))))
-                    output[ind] = [str(card1),
-                                   str(card2),
-                                   str(money_bin),
-                                   "SB" if sb else "BB",
-                                   str(prediction),
-                                   str("call" if classify_prediction(prediction) else "fold")]
-                    ind += 1
+            code1 = card1.encode()
+            code2 = card2.encode()
+            if code1 < code2:
+                hand = Hand()
+                hand.cards = [card1, card2]
+                initial_num_chips = 20
+                for money_bin in range(4):
+                    for sb in range(2):
+                        prediction = (model.predict(
+                            NeuralNetPokerEnv.encode(hand, sb, int(initial_num_chips / 4) * money_bin,
+                                                     initial_num_chips)))
+                        # print('{},{},{},{},{},{}'.format(card1, card2, money_bin, "SB" if sb else "BB", prediction,
+                        #                                  np.argmax(np.array(prediction))))
+                        output.append([str(card1),
+                                       str(card2),
+                                       str(money_bin),
+                                       "SB" if sb else "BB",
+                                       str(prediction),
+                                       str("call" if classify_prediction(prediction) else "fold")])
+                        ind += 1
     import json
     if verbose:
         pprint(output)
     if filename:
         with open(filename, 'w', encoding='utf8') as outfile:
+            data = (json.dumps(output, sort_keys=True, ensure_ascii=False))
+            outfile.write(data)
+        with open(filename + "pretty.json", 'w', encoding='utf8') as outfile:
             data = (json.dumps(output, sort_keys=True, indent=1, ensure_ascii=False))
             outfile.write(data)

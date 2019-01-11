@@ -22,8 +22,8 @@ class NeuralNetworkTrainer:
         self.model = npc.model
         self.nc = num_of_chips
 
-    def train_agent(self, enforce_play=False, both_neural=False):
-        num_episodes = 1000000
+    def train_agent(self, enforce_play=False, both_neural=False, save_every=100000):
+        num_episodes = 10000000
 
         env = NeuralNetPokerEnv(self.nc)
 
@@ -105,7 +105,7 @@ class NeuralNetworkTrainer:
                     self.model.fit(new_state1, np.array(post_action_value1), epochs=1, verbose=0)
                     self.model.fit(new_state2, np.array(post_action_value2), epochs=1, verbose=0)
 
-                if i % 1000 == 1:
+                if i % save_every == 1:
                     save_poker_model(self.model, i)
 
             else:
@@ -158,7 +158,7 @@ class NeuralNetworkTrainer:
                     self.model.fit(old_state, np.array(post_action_value), epochs=1, verbose=0)
                     self.model.fit(new_state, np.array(post_action_value), epochs=1, verbose=0)
 
-                if i % 1000 == 1:
+                if i % save_every == 1:
                     save_poker_model(self.model, i)
 
 
