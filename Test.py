@@ -119,13 +119,13 @@ def print_qt():
             _h.clear_hand()
 
 
-def train_neural_network():
-    nn = NeuralNetworkTrainer(4)
-    nn.train_agent(enforce_play=True, both_neural=True)
+def train_neural_network(enforce_play=False, save_every=100000):
+    nn = NeuralNetworkTrainer(20)
+    nn.train_agent(enforce_play=enforce_play, save_every=save_every)
 
 
 if __name__ == "__main__":
     # train_agent()
     # print_qt()
-    train_neural_network()
+    train_neural_network(False, 10000)
     print_neural_network_predictions(filename="./NeuralNet/Q_after_training.json", verbose=True)

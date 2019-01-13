@@ -11,7 +11,7 @@ class State:
             leading_bit = 52 * 52
         else:
             leading_bit = 0
-        self.encoded = leading_bit + sorted_hand[0].encode() * 52 + sorted_hand[1].encode()
+        self.encoded = leading_bit + encode() * 52 + encode()
         # self.encoded = str(sorted(hand.cards)) + str(small_blind)
 
 

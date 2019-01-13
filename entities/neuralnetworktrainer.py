@@ -1,10 +1,8 @@
 from random import random
-from typing import List
 
 from keras.layers import np
 
-from entities import Player
-from entities.neuralnetworknpc import NeuralNetworkNPC, save_poker_model, classify_prediction
+from entities.neuralnetworknpc import NeuralNetworkNPC, save_poker_model, encode_to_vector
 from gym_poker.envs.neural_net_poker_env import NeuralNetPokerEnv
 
 
@@ -16,150 +14,101 @@ class NeuralNetworkTrainer:
           52 ,   52 ,   2  ,     4
         """
 
-    def __init__(self, num_of_chips=4):
+    def __init__(self, num_of_chips=20):
 
         npc = NeuralNetworkNPC()
         self.model = npc.model
         self.nc = num_of_chips
 
-    def train_agent(self, enforce_play=False, both_neural=False, save_every=100000):
+    def train_agent(self, enforce_play=False, save_every=100000):
         num_episodes = 10000000
 
         env = NeuralNetPokerEnv(self.nc)
+        neural_npc = NeuralNetworkNPC()
 
         alpha = 0.1
-        eps = 0.9
-        decay_factor = 0.999
+        eps = 0.1
         gamma = 0.6
 
-        save_poker_model(self.model, "initial")
+        # save_poker_model(self.model, "initial")
 
         for i in range(num_episodes):
-            s: List[Player] = env.reset(self.nc, rand_bank_dist=True)
-            player1: Player = s[0]
-            player2: Player = s[1]
-            eps *= decay_factor
+            s = env.reset(self.nc, rand_bank_dist=True)
+
             if i % 100 == 0:
                 print("Episode {} of {}".format(i + 1, num_episodes))
 
-            if both_neural:
-                if np.random.random() < eps:
-                    a1 = 0 if random() > 0.5 else 1
-                else:
-                    # encode state to vector
-                    state: np.ndarray = NeuralNetPokerEnv.encode(player1.hand, 0, player1.bank, self.nc)
-                    a1 = classify_prediction(self.model.predict(state))
+            done = False
+            post_river = False
+            while not done:
 
-                if np.random.random() < eps:
-                    a2 = 0 if random() > 0.5 else 1
-                else:
-                    # encode state to vector
-                    state: np.ndarray = NeuralNetPokerEnv.encode(player2.hand, 0, player2.bank, self.nc)
-                    a2 = classify_prediction(self.model.predict(state))
+                player1 = s[0]
+                player2 = s[1]
 
-                if enforce_play:
+                hole_cards1 = player1.hand.cards[0:2]
+                hole_cards2 = player2.hand.cards[0:2]
+                community_cards = player1.hand.cards[2:]
+
+                state1, _ = encode_to_vector(hole_cards1, community_cards, 0, player1.bank, self.nc)
+                state2, _ = encode_to_vector(hole_cards2, community_cards, 0, player2.bank, self.nc)
+
+                a1 = self.neural_make_a_move(eps, neural_npc, player1, post_river)
+                a2 = self.neural_make_a_move(eps, neural_npc, player2, post_river)
+
+                if enforce_play or post_river:
                     a1, a2 = 1, 1
 
-                old_state1: np.ndarray = NeuralNetPokerEnv.encode(player1.hand, 0, player1.bank, self.nc)
-                old_state2: np.ndarray = NeuralNetPokerEnv.encode(player2.hand, 0, player2.bank, self.nc)
-
                 new_s, r, done, _ = env.step([a1, a2])
-                # only interested in our agents reward as the opponent is random p
-                old_reward1 = norm_reward(r[0])
-                old_reward2 = norm_reward(r[1])
-                old_value1 = self.model.predict(old_state1)
-                old_value2 = self.model.predict(old_state2)
-                if done:
-                    # only relevant if we want to reward for opponent folds
+                reward1 = r[0]
+                reward2 = r[1]
 
-                    post_action_value1 = (1 - alpha) * old_value1 + (alpha) * old_reward1
-                    # self.model.fit(old_state1, np.array(post_action_value1), epochs=1, verbose=0)
-                    # if old_reward2 != 0:
-                    #     post_action_value2 = (1 - alpha) * old_value2 + (alpha) * old_reward2
-                    #     self.model.fit(old_state2, np.array(post_action_value2), epochs=1, verbose=0)
-                    # self.model.fit \
-                    #     (np.array([old_state1, old_state2]),
-                    #      np.array([post_action_value1, post_action_value2]),
-                    #      epochs=1,
-                    #      verbose=0)
-                else:
-                    # we take only 1 from as we
-                    new_s, r, done, _ = env.step([a1, a2])
-                    new_state1 = NeuralNetPokerEnv.encode(player1.hand, 0, player1.bank, self.nc)
-                    new_state2 = NeuralNetPokerEnv.encode(player2.hand, 0, player2.bank, self.nc)
-                    new_reward1 = norm_reward(r[0])
-                    new_reward2 = norm_reward(r[1])
-                    post_action_value1 = 0.5 + ((1 - alpha) * (old_value1 - 0.5) + alpha * gamma * new_reward1)
-                    post_action_value2 = 0.5 + ((1 - alpha) * (old_value2 - 0.5) + alpha * gamma * new_reward2)
-                    # self.model.fit\
-                    #     (np.array([old_state1, new_state1, old_state2, new_state2]),
-                    #      np.array([post_action_value1, post_action_value1, post_action_value2, post_action_value2]),
-                    #      epochs=1,
-                    #      verbose=0)
-                    # self.model.fit(old_state1, np.array([classify_prediction(0.5 + post_action_value1/2)]), epochs=1, verbose=0)
-                    # self.model.fit(old_state2, np.array([classify_prediction(0.5 + post_action_value1/2)]), epochs=1, verbose=0)
-                    # self.model.fit(new_state1, np.array([classify_prediction(0.5 + new_reward1/2)]), epochs=1, verbose=0)
-                    # self.model.fit(new_state2, np.array([classify_prediction(0.5 + new_reward2/2)]), epochs=1, verbose=0)
-                    self.model.fit(old_state1, np.array(post_action_value1), epochs=1, verbose=0)
-                    self.model.fit(old_state2, np.array(post_action_value2), epochs=1, verbose=0)
-                    self.model.fit(new_state1, np.array(post_action_value1), epochs=1, verbose=0)
-                    self.model.fit(new_state2, np.array(post_action_value2), epochs=1, verbose=0)
+                # old_value1 = self.model.predict(state1)
+                # old_value2 = self.model.predict(state2)
+
+                next_reward1 = np.zeros((2,))
+                next_reward2 = np.zeros((2,))
+
+                if new_s:
+                    hole_cards1 = new_s[0].hand.cards[0:2]
+                    hole_cards2 = new_s[1].hand.cards[0:2]
+                    community_cards = player1.hand.cards[2:]
+
+                    next_state1, _ = encode_to_vector(hole_cards1, community_cards, 0, player1.bank, self.nc)
+                    next_state2, _ = encode_to_vector(hole_cards2, community_cards, 0, player2.bank, self.nc)
+
+                    next_reward1[1] = self.model.predict(next_state1)[0, 1]
+                    next_reward2[1] = self.model.predict(next_state2)[0, 1]
+
+                target1 = reward1 + gamma * next_reward1[a1]
+                target2 = reward2 + gamma * next_reward2[a2]
+
+                target_vec1 = np.zeros((1, 2,))
+                target_vec2 = np.zeros((1, 2,))
+
+                target_vec1[0, a1] = target1
+                target_vec2[0, a2] = target2
+
+                self.model.fit(state1, target_vec1, epochs=1, verbose=0)
+                if a1:
+                    self.model.fit(state2, target_vec2, epochs=1, verbose=0)
+
+                s = new_s
 
                 if i % save_every == 1:
                     save_poker_model(self.model, i)
 
-            else:
-                # episode is short (1 or 2 states in episode) no need for 'while not done'
-                if player1.type == "n":
-                    neural_player = player1
-                    # small blind player
-                    ind = 0
-                    if np.random.random() < eps:
-                        a1 = 0 if random() > 0.5 else 1
-                    else:
-                        # encode state to vector
-                        state: np.ndarray = NeuralNetPokerEnv.encode(player1.hand, 0, player1.bank, self.nc)
-                        a1 = classify_prediction(self.model.predict(state))
-                    a2 = 0 if random() > 0.5 else 1
-                else:
-                    # big blind player
-                    neural_player = player2
-                    ind = 1
-                    if np.random.random() < eps:
-                        a2 = 0 if random() > 0.5 else 1
-                    else:
-                        # encode state to vector
-                        state: np.ndarray = NeuralNetPokerEnv.encode(player2.hand, 1, player2.bank, self.nc)
-                        a2 = classify_prediction(self.model.predict(state))
-                    a1 = 0 if random() > 0.5 else 1
-
-                if enforce_play:
-                    a1, a2 = 1, 1
-
-                old_state: np.ndarray = NeuralNetPokerEnv.encode(neural_player.hand, 0, neural_player.bank, self.nc)
-                new_s, r, done, _ = env.step([a1, a2])
-                # only interested in our agents reward as the opponent is random p
-                old_reward = norm_reward(r[ind])
-                old_value = self.model.predict(old_state)
-                if done:
-                    # only relevant if we want to reward for opponent folds
-                    post_action_value = (1 - alpha) * old_value[0] + (alpha) * old_reward
-                    # self.model.fit(old_state, np.array([1 if post_action_value > 0 else 0]), 1, verbose=0)
-                    # self.model.fit(old_state, np.array([post_action_value]), epochs=1, verbose=0)
-                else:
-                    # we take only 1 from as we
-                    new_s, r, done, _ = env.step([a1, a2])
-                    new_state = NeuralNetPokerEnv.encode(neural_player.hand, 0, neural_player.bank, self.nc)
-                    new_reward = norm_reward(r[ind])
-                    post_action_value = old_value + ((1 - alpha) * old_reward + alpha * gamma * new_reward)
-                    print("{},{},{}".format(old_reward, new_reward, post_action_value))
-                    # self.model.fit(new_state, np.array([1 if post_action_value > 0 else 0]), epochs=1, verbose=0)
-
-                    self.model.fit(old_state, np.array(post_action_value), epochs=1, verbose=0)
-                    self.model.fit(new_state, np.array(post_action_value), epochs=1, verbose=0)
-
-                if i % save_every == 1:
-                    save_poker_model(self.model, i)
+    def neural_make_a_move(self, eps, neural_npc, player, post_river):
+        if post_river:
+            return 1
+        if np.random.random() < eps:
+            a = 0 if random() > 0.5 else 1
+        else:
+            # encode_to_vector state to vector
+            hole_cards = player.hand.cards[0:2]
+            community_cards = player.hand.cards[2:]
+            state, _ = encode_to_vector(hole_cards, community_cards, 0, player.bank, self.nc)
+            a = neural_npc.make_a_move(state)
+        return a
 
 
 def norm_reward(reward):
@@ -173,8 +122,3 @@ def norm_reward(reward):
     else:
         reward = 0
     return reward
-
-
-if __name__ == "__main__":
-    neural_network = NeuralNetworkTrainer(4)
-    neural_network.train_agent()

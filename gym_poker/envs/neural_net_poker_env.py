@@ -2,7 +2,6 @@ from random import randint
 from random import random
 
 import gym
-import numpy as np
 
 from entities import *
 
@@ -27,9 +26,9 @@ class NeuralNetPokerEnv(gym.Env):
                 0 if fold, 1 otherwise
          """
         neutral_grade = 0
-        fold_grade = 1
-        soft_grade = 9
-        hard_grade = 10
+        sb_chips = 1
+        bb_chips = 2
+        bankrupt_qualifier = 1.0
 
         sb_player: Player = self._g.sb_player()
         bb_player: Player = self._g.bb_player()
@@ -50,9 +49,13 @@ class NeuralNetPokerEnv(gym.Env):
         # assumption that both players called and 5 of the cards are mutual to both hands
         # but in 7 cards situation the decision was either taken and we have only 1 action - resolve
         # we neglect the game flow and the bank operations as we view episode over if new cards are drawn
+        ######################################
+
         if (len(sb_player.hand.cards) == 7) and (len(sb_player.hand.cards) == 7):
+            pot = self._g.pot
             results = []
             for ep in [sb_player, bb_player]:
+                ep.hand.sort()
                 results.append(Game.score(ep.hand))
             # select the winner
             winners = Game.determine_winner(results)
@@ -67,17 +70,18 @@ class NeuralNetPokerEnv(gym.Env):
                 self._g.player_won(self._g.p[winners[0]])
                 rewards = []
                 # Reward the winner with chips won
+
                 if sb_player.bank == 0:
-                    rewards = [-hard_grade, hard_grade]
+                    rewards = [-bankrupt_qualifier * pot, bankrupt_qualifier * pot]
                 elif bb_player.bank == 0:
-                    rewards = [hard_grade, -hard_grade]
+                    rewards = [bankrupt_qualifier * pot, -bankrupt_qualifier * pot]
                 else:
-                    loser_bank = self._g.p[1 - winners[0]].bank
-                    winner_bank = self._g.p[winners[0]].bank
+                    # loser_bank = self._g.p[1 - winners[0]].bank
+                    # winner_bank = self._g.p[winners[0]].bank
                     # rewards.insert(winners[0], hard_grade * winner_bank / (loser_bank + winner_bank))
                     # rewards.insert(1 - winners[0], -hard_grade * loser_bank / (loser_bank + winner_bank))
-                    rewards.insert(winners[0], soft_grade)
-                    rewards.insert(1 - winners[0], -soft_grade)
+                    rewards.insert(winners[0], pot)
+                    rewards.insert(1 - winners[0], -pot)
             done = True
             next_state = None
         # due to simplicity of our game model immediate alternative is having 2 cards in the hand
@@ -96,8 +100,6 @@ class NeuralNetPokerEnv(gym.Env):
                         new_card = self._g.deck.draw_card()
                         for ep in self._g.p:
                             ep.hand.add_card(new_card)
-                    for pl in self._g.p:
-                        pl.hand.sort()
                     # immediate reward - 0 for both
                     done = False
                     rewards = [neutral_grade, neutral_grade]
@@ -106,13 +108,13 @@ class NeuralNetPokerEnv(gym.Env):
                     # BB fold - episode over
                     done = True
                     # rewards = [0, 0]
-                    rewards = [fold_grade, -fold_grade]
+                    rewards = [bb_chips, -bb_chips]
                     next_state = None
             else:
                 # SB fold - episode over
                 done = True
                 # rewards = [0, 0]
-                rewards = [-fold_grade, neutral_grade]
+                rewards = [-sb_chips, neutral_grade]
                 next_state = None
         else:
             raise ValueError(
@@ -150,19 +152,4 @@ class NeuralNetPokerEnv(gym.Env):
     def render(self, mode='human'):
         self._g.render_game()
 
-    @staticmethod
-    def encode(hand, small_blind, _num_of_chips, initial_num_of_chips):
-        """Encoding and decoding code was lifted from openAI taxi gym"""
-        # encode vector of input value
-        encoded_input_vector = np.zeros([1, 58])  # 52 for cards 2 for small or big blind 4 for money bins
-        for card in hand.cards:
-            encoded_input_vector[0, Card.encode(card)] = 1
-        if small_blind:
-            encoded_input_vector[0, 52 + 1] = 1
-        else:
-            encoded_input_vector[0, 52 + 2] = 1
-        money_bin = 2 * (_num_of_chips - 1) // initial_num_of_chips
-        for i in range(1, money_bin):
-            encoded_input_vector[0, 52 + 2 + i] = 1
 
-        return encoded_input_vector

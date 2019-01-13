@@ -49,7 +49,7 @@ class Card:
 
     @staticmethod
     def decode(cd):
-        """"returns card corresponding to encode"""
+        """"returns card corresponding to encode_to_vector"""
         rank = cd % 13 + 2
         suit = get_suit_from_value(int(cd / 13))
         return Card(suit, rank)
