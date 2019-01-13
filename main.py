@@ -126,9 +126,9 @@ def neural_test():
     call_fold = [0, 0]
     neural_npc = NeuralNetworkNPC()
     q_table_npc = QtableNPC()
-    for games in range(1000):
+    for games in range(10000):
         # q - indicate q-table, indicate
-        game = Game("Tegra", player_types["r"], "Firluk", player_types["n"])
+        game = Game("Tegra", player_types["q"], "Firluk", player_types["n"])
         if random() > 0.5:
             game.end_round()
         while not game.done:

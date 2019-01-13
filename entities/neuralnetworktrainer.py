@@ -20,23 +20,20 @@ class NeuralNetworkTrainer:
         self.model = npc.model
         self.nc = num_of_chips
 
-    def train_agent(self, enforce_play=False, save_every=100000):
-        num_episodes = 10000000
+    def train_agent(self, enforce_play=False, save_every=100000, total_episodes=100000):
 
         env = NeuralNetPokerEnv(self.nc)
         neural_npc = NeuralNetworkNPC()
 
-        alpha = 0.1
-        eps = 0.1
+        eps = 0.5
         gamma = 0.6
 
-        # save_poker_model(self.model, "initial")
-
-        for i in range(num_episodes):
+        for i in range(total_episodes):
             s = env.reset(self.nc, rand_bank_dist=True)
 
-            if i % 100 == 0:
-                print("Episode {} of {}".format(i + 1, num_episodes))
+            if i % save_every == 0 and save_every:
+                print("Episode {} of {}".format(i + 1, total_episodes))
+                save_poker_model(self.model, i + 1)
 
             done = False
             post_river = False
@@ -61,9 +58,6 @@ class NeuralNetworkTrainer:
                 new_s, r, done, _ = env.step([a1, a2])
                 reward1 = r[0]
                 reward2 = r[1]
-
-                # old_value1 = self.model.predict(state1)
-                # old_value2 = self.model.predict(state2)
 
                 next_reward1 = np.zeros((2,))
                 next_reward2 = np.zeros((2,))
@@ -94,9 +88,6 @@ class NeuralNetworkTrainer:
 
                 s = new_s
 
-                if i % save_every == 1:
-                    save_poker_model(self.model, i)
-
     def neural_make_a_move(self, eps, neural_npc, player, post_river):
         if post_river:
             return 1
@@ -109,16 +100,3 @@ class NeuralNetworkTrainer:
             state, _ = encode_to_vector(hole_cards, community_cards, 0, player.bank, self.nc)
             a = neural_npc.make_a_move(state)
         return a
-
-
-def norm_reward(reward):
-    # reward is between -10 and 10, old value is between -1 and 1 iirc
-    if reward > 0:
-        # reward = reward / 10 + 0.5
-        reward = reward / 10
-    elif reward < 0:
-        # reward = 0.5 + reward / 10
-        reward = reward / 10
-    else:
-        reward = 0
-    return reward

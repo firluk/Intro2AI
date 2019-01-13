@@ -4,8 +4,6 @@ import numpy as np
 
 from entities.card import Card
 from entities.hand import Hand
-from entities.neuralnetworknpc import print_neural_network_predictions
-from entities.neuralnetworktrainer import NeuralNetworkTrainer
 from entities.qtabletrainer import QTableTrainer
 from gym_poker.envs.poker_env import PokerEnv
 
@@ -119,13 +117,6 @@ def print_qt():
             _h.clear_hand()
 
 
-def train_neural_network(enforce_play=False, save_every=100000):
-    nn = NeuralNetworkTrainer(20)
-    nn.train_agent(enforce_play=enforce_play, save_every=save_every)
-
-
 if __name__ == "__main__":
-    # train_agent()
-    # print_qt()
-    train_neural_network(False, 10000)
-    print_neural_network_predictions(filename="./NeuralNet/Q_after_training.json", verbose=True)
+    train_agent()
+    print_qt()

@@ -104,8 +104,8 @@ class PokerEnv(gym.Env):
         """Encoding and decoding code was lifted from openAI taxi gym"""
         # Sort hand and extract cards
         _sorted_hand = sorted(hand.cards, reverse=True)
-        _card1 = encode()
-        _card2 = encode()
+        _card1 = _sorted_hand[0].encode()
+        _card2 = _sorted_hand[1].encode()
         # Calculate coefficient of number of chips
         _coef_chips = 2 * _num_of_chips // initial_num_of_chips
         # Encode
