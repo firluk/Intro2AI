@@ -129,7 +129,7 @@ def resolve_hands(p, g):
         g.player_won(p[winners[0]])
 
 
-def main(p1, p2, num_of_games,num_of_chips):
+def main(p1, p2, num_of_games, num_of_chips):
     # [0] player1 won accumulator, [1] player2 won accumulator
     stats = [0, 0]
     game_length = [0]
@@ -143,7 +143,7 @@ def main(p1, p2, num_of_games,num_of_chips):
         q_table_npc = None
     for games in range(num_of_games):
         # q - indicate q-table, indicate
-        game = Game(player_types[p1], player_types[p1], player_types[p2], player_types[p2],bank=num_of_chips)
+        game = Game(player_types[p1], player_types[p1], player_types[p2], player_types[p2], bank=num_of_chips)
         if random() > 0.5:
             game.end_round()
         while not game.done:
@@ -188,8 +188,7 @@ def main(p1, p2, num_of_games,num_of_chips):
             s = pl.name + " has won the game with "
             s += str(pl.bank) + " coins"
             print(s)
-        print()
-        print()
+        print('\n')
         # endregion
         print(stats)
     print("In total: Player1[" + player_types[p1] + "] has won " + str(stats[0]))

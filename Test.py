@@ -1,4 +1,5 @@
 import random
+import time
 
 import numpy as np
 
@@ -79,12 +80,12 @@ def generate_fh(val=15, val2=15):
     return h
 
 
-def train_agent():
-    qt = QTableTrainer(10)
-    qt.train_agent()
+def train_agent(crds, chips):
+    trainer = QTableTrainer(chips)
+    trainer.train_agent(crds)
 
 
-def print_qt():
+def print_qt(num, ch):
     _c = False
     _qt = None
     try:
@@ -97,16 +98,15 @@ def print_qt():
     if not _c:
         exit(0)
     _h = Hand()
-    _nc = 10
     _res = np.zeros(8, dtype=int)
-    for i in range(52):
+    for i in range(num):
         print("Cards  --  big blind  --  money ranges  --  small blind  -- money ranges")
-        for j in range(i + 1, 52):
+        for j in range(i + 1, num):
             _h.add_card(Card.decode(i))
             _h.add_card(Card.decode(j))
             for i1 in range(2):
                 for j1 in range(4):
-                    _res[i1 * 4 + j1] = PokerEnv.encode(_h, i1, 4 + (j1 * 5), _nc)
+                    _res[i1 * 4 + j1] = PokerEnv.encode(_h, i1, 1 + (j1 * (ch / 2)), ch)
             _s = _h.__str__() + " - "
             for i2 in range(8):
                 _s += str.format('{:.2f}', _qt[_res[i2]][0])
@@ -118,5 +118,11 @@ def print_qt():
 
 
 if __name__ == "__main__":
-    train_agent()
-    print_qt()
+    strt = time.time()
+    cards = 52
+    starting_chips = 20
+    penalty = 25
+    train_agent(cards, starting_chips)
+    print_qt(cards, starting_chips)
+    elapsed = int(time.time() - strt)
+    print("Time elapsed: {0:d}:{1:02d}".format(elapsed // 60, elapsed % 60))

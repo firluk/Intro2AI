@@ -1,3 +1,5 @@
+from random import random
+
 import numpy as np
 
 
@@ -9,11 +11,12 @@ class QtableNPC:
       52 ,   52 ,   2  ,     4
     """
 
-    def __init__(self, qtable=None):
+    def __init__(self, qtable=None, bluff=False):
         """Constructs an agent for poker game
 
         :param qtable: Table for decision making
         """
+        self.b = bluff
         if qtable is not None:
             self.qt = qtable
         else:
@@ -27,8 +30,8 @@ class QtableNPC:
                 # File does not exists
                 self.qt = np.zeros([n_s, n_a])
                 # Make the agent prefer to go all in and not to fold
-                self.qt[range(n_s), 0] = -1
-                self.qt[range(n_s), 1] = 1
+                self.qt[range(n_s), 0] = 0
+                self.qt[range(n_s), 1] = 0
 
     def make_a_move(self, observation_code):
         """Makes a decision whenever to fold or play
@@ -37,6 +40,6 @@ class QtableNPC:
         """
         action = np.argmax(self.qt[observation_code])
         # (bluff) If the decision is to fold give a 10% chance that will go all in instead
-        """if action == 0 and random() > 0.9:
-            action = 1"""
+        if self.b and action == 0 and random() > 0.9:
+            action = 1
         return action

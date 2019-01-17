@@ -32,6 +32,10 @@ class Deck:
     def cards_left(self):
         return self._deck.__len__()
 
+    def remove_card(self, code):
+        c = Card.decode(code)
+        self._deck.remove(c)
+
 
 def pull_suit():
     _suits = ["Spade", "Club", "Diamond", "Heart"]
