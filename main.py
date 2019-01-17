@@ -129,7 +129,7 @@ def resolve_hands(p, g):
         g.player_won(p[winners[0]])
 
 
-def main(p1, p2, num_of_games):
+def main(p1, p2, num_of_games,num_of_chips):
     # [0] player1 won accumulator, [1] player2 won accumulator
     stats = [0, 0]
     game_length = [0]
