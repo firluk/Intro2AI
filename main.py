@@ -143,7 +143,7 @@ def main(p1, p2, num_of_games,num_of_chips):
         q_table_npc = None
     for games in range(num_of_games):
         # q - indicate q-table, indicate
-        game = Game(player_types[p1], player_types[p1], player_types[p2], player_types[p2])
+        game = Game(player_types[p1], player_types[p1], player_types[p2], player_types[p2],bank=num_of_chips)
         if random() > 0.5:
             game.end_round()
         while not game.done:
