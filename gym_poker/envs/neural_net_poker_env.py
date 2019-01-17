@@ -28,7 +28,7 @@ class NeuralNetPokerEnv(gym.Env):
         neutral_grade = 0
         sb_chips = 1
         bb_chips = 2
-        bankrupt_qualifier = 1.0
+        bankrupt_qualifier = 1.1
 
         sb_player: Player = self._g.sb_player()
         bb_player: Player = self._g.bb_player()
@@ -36,8 +36,8 @@ class NeuralNetPokerEnv(gym.Env):
         # consideration : award and punish win/loss by fixed value not by money value
         # 1 / -1 sb in bb fold
         # -1 / 0 sb fold bb irrelevant
-        # 5 / -5 win loss but game not over
-        # 10 / -10 win loss and game is over
+        # pot is awarded as a reward to winner
+        # -pot as a punishment for loser
         ######################################
         # mdp continuation:
         # 1)sb and bb 2 cards each
@@ -76,12 +76,9 @@ class NeuralNetPokerEnv(gym.Env):
                 elif bb_player.bank == 0:
                     rewards = [bankrupt_qualifier * pot, -bankrupt_qualifier * pot]
                 else:
-                    # loser_bank = self._g.p[1 - winners[0]].bank
-                    # winner_bank = self._g.p[winners[0]].bank
-                    # rewards.insert(winners[0], hard_grade * winner_bank / (loser_bank + winner_bank))
-                    # rewards.insert(1 - winners[0], -hard_grade * loser_bank / (loser_bank + winner_bank))
-                    rewards.insert(winners[0], pot)
-                    rewards.insert(1 - winners[0], -pot)
+                    gain = min(pot, self._g.p[winners[0]].bet * 2)
+                    rewards.insert(winners[0], gain)
+                    rewards.insert(1 - winners[0], -gain)
             done = True
             next_state = None
         # due to simplicity of our game model immediate alternative is having 2 cards in the hand
@@ -124,8 +121,8 @@ class NeuralNetPokerEnv(gym.Env):
     def reset(self, bank=4, rand_bank_dist=False):
         """Initial setup for training
 
-        :param model: model for the neural net player
         :param bank : initial bank size
+        :param rand_bank_dist: boolean field indicating used for covering unbalanced setups for money distribution
         :returns [small blind player, big blind player]
         """
         # randomly pick neural and random
@@ -151,5 +148,3 @@ class NeuralNetPokerEnv(gym.Env):
 
     def render(self, mode='human'):
         self._g.render_game()
-
-

@@ -5,17 +5,17 @@ from keras import Sequential
 from keras.engine import InputLayer
 from keras.layers import Dense
 from keras.models import load_model, save_model
+from prettytable import PrettyTable
 
 from entities import Hand, Card
 from entities.deck import get_deck
 
 
 class NeuralNetworkNPC:
-    """ Q-table base agent for simple poker
+    """ Neural network based agent for toy poker
 
     Observation Space includes:
-    Card1, Card2, BB/SB, Chips Amount [0 -- n/2 -- n -- 1.5n -- 2n]
-      52 ,   52 ,   2  ,     4
+    Card1, Card2, BB/SB, Chips Amount, Community cards
     """
 
     def __init__(self, model=None):
@@ -50,6 +50,7 @@ class NeuralNetworkNPC:
 
 
 def create_empty_model():
+    """ Creation of empty model """
     model = Sequential()
     model.add(InputLayer(input_shape=(106,)))
     model.add(Dense(53))
@@ -59,24 +60,32 @@ def create_empty_model():
 
 
 def load_poker_model():
+    """ Load keras model """
     return load_model('./NeuralNet/my_model.h5')
 
 
 def save_poker_model(model, i="_end"):
+    """ Saving keras model for future use """
     save_model(model, './NeuralNet/my_model' + str(i) + '.h5')
     save_model(model, './NeuralNet/my_model.h5')
-    print_neural_network_predictions(model, './NeuralNet/Q_my_model' + str(i) + ".json")
+    print_neural_network_predictions(model, './NeuralNet/Q_my_model' + str(i) + ".txt")
 
 
-def print_neural_network_predictions(model=None, filename=None, verbose=False):
+def print_neural_network_predictions(model=None, filename=None, verbose=False, money_bins=4):
+    """ Function for printing q-table like readable representation of the neural network model """
     ordered_deck = get_deck()
     nn_npc = NeuralNetworkNPC(model)
     if model is None:
         model = nn_npc.model
 
-    output = []
+    titles = ['Cards']
+    for blind_suffix in ["SB", "BB"]:
+        for money_bin in range(money_bins):
+            for title in ["Fold", "Call", "Action"]:
+                titles.append(title + blind_suffix + str(money_bin))
 
-    ind = 0
+    t = PrettyTable(titles)
+
     for card1 in ordered_deck:
         for card2 in ordered_deck:
             code1 = card1.encode()
@@ -85,32 +94,26 @@ def print_neural_network_predictions(model=None, filename=None, verbose=False):
                 hand = Hand()
                 hand.cards = [card1, card2]
                 initial_num_chips = 20
-                for money_bin in range(4):
-                    for sb in range(2):
-                        bank = int(initial_num_chips / 4) * money_bin
+                _s = str(card1) + " " + str(card2)
+                row = [_s]
+                for sb in range(2):
+                    for money_bin in range(money_bins):
+                        bank = int(initial_num_chips / money_bins) * money_bin + (initial_num_chips / money_bins) / 2
                         my_state, _ = encode_to_vector(hand.cards, [], sb, bank, initial_num_chips)
                         prediction = model.predict(my_state)
-                        output.append([str(card1),
-                                       str(card2),
-                                       str(money_bin),
-                                       "SB" if sb else "BB",
-                                       str(prediction),
-                                       str("call" if nn_npc.make_a_move(my_state) else "fold")])
-                        ind += 1
-    import json
+                        row.append(round(prediction[0, 0], 2))
+                        row.append(round(prediction[0, 1], 2))
+                        row.append(str("call" if nn_npc.make_a_move(my_state) else "fold"))
+                t.add_row(row)
     if verbose:
-        pprint(output)
+        pprint(str(t))
     if filename:
         with open(filename, 'w', encoding='utf8') as outfile:
-            data = (json.dumps(output, sort_keys=True, ensure_ascii=False))
-            outfile.write(data)
-        with open(filename + "pretty.json", 'w', encoding='utf8') as outfile:
-            data = (json.dumps(output, sort_keys=True, indent=1, ensure_ascii=False))
-            outfile.write(data)
+            outfile.write(str(t))
 
 
 def encode_to_vector(hole_cards, community_cards, small_blind, num_of_chips, initial_num_of_chips):
-    """Encode the preflop or river knowing 2 players cards"""
+    """Encode the 2 hole cards, community cards"""
     # encode_to_vector vector of input value
     # structure of the feature vector is the following:
     # [0-51] indicate the probability of having specific card: 1 -> having 0 -> not 0.02 -> 0.02 probability for card
@@ -157,16 +160,3 @@ def encode_to_vector(hole_cards, community_cards, small_blind, num_of_chips, ini
     opponent_encoded_vector[0, 53] = 1 - encoded_vector[0, 53]  # money
 
     return encoded_vector, opponent_encoded_vector
-
-
-if __name__ == '__main__':
-    hole_cards = [Card("Heart", 14), Card("Heart", 13)]
-    # community_cards = []
-    community_cards = [Card("Heart", 12), Card("Heart", 11), Card("Heart", 10), Card("Heart", 9), Card("Heart", 8)]
-    small_blind = 1
-    _num_of_chips = 10
-    initial_num_of_chips = 10
-    my_vect, opp_vect = encode_to_vector(hole_cards, community_cards, small_blind, _num_of_chips, initial_num_of_chips)
-    print(my_vect)
-    print(opp_vect)
-    print(my_vect - opp_vect)
