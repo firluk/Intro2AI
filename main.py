@@ -1,28 +1,46 @@
+import sys
+from random import random
+
 from entities.game import Game
+from entities.neuralnetworknpc import NeuralNetworkNPC, encode_to_vector
+from entities.qtablenpc import QtableNPC
 from entities.randomnpc import RandomNPC
 from gym_poker.envs.poker_env import PokerEnv
 
-player_types = {"h": "Human", "r": "Random", "q": "Qtable"}
+player_types = {"h": "Human", "r": "Random", "q": "Qtable", "n": "NeuralNet"}
 
 
-def small_blind(p, game):
+def small_blind(p, game, neural_model_npc=None, q_table_npc=None):
     move = False
-    if p.mode.__eq__(player_types["h"]):
-        retry = True
-        while retry:
-            inp = input("Do you want to (F)old or go (A)ll in?").lower()
-            if inp == "f":
-                move = False
-            elif inp == "a":
-                move = True
-                retry = False
-            game.render_game()
-    elif p.mode.__eq__(player_types["r"]):
-        move = RandomNPC.make_a_move()
-    elif p.mode.__eq__(player_types["q"]):
-        move = game.qagent.make_a_move(PokerEnv.encode(p.hand, 0, p.bank, game.bank))
+    if p.bank == 0:
+        print(p.name + " can't fold - no money left to play next hand")
+        move = 1
     else:
-        pass
+        if p.mode.__eq__(player_types["h"]):
+            retry = True
+            while retry:
+                inp = input("Do you want to (F)old or go (A)ll in?").lower()
+                if inp == "f":
+                    move = False
+                elif inp == "a":
+                    move = True
+                    retry = False
+                game.render_game()
+        elif p.mode.__eq__(player_types["r"]):
+            move = RandomNPC.make_a_move()
+        elif p.mode.__eq__(player_types["q"]):
+            move = q_table_npc.make_a_move(PokerEnv.encode(p.hand, 0, p.bank, game.bank))
+        elif p.mode.__eq__(player_types["n"]):
+            hole_cards = p.hand.cards[0:2]
+            community_cards = p.hand.cards[2:]
+            small_blind = 1
+            num_of_chips = p.bank
+            initial_num_of_chips = game.bank
+            state, _ = encode_to_vector(hole_cards, community_cards, small_blind, num_of_chips,
+                                        initial_num_of_chips)
+            move = neural_model_npc.make_a_move(state)
+        else:
+            pass
     if not move:
         print(p.name, "folds")
         return False
@@ -32,23 +50,35 @@ def small_blind(p, game):
         return True
 
 
-def big_blind(p, game):
-    move = False
-    if p.mode.__eq__(player_types["h"]):
-        retry = True
-        while retry:
-            inp = input("Do you want to (F)old or (C)all?").lower()
-            if inp == "f":
-                move = False
-            elif inp == "c":
-                retry = False
-        game.render_game()
-    elif p.mode.__eq__(player_types["r"]):
-        move = RandomNPC.make_a_move()
-    elif p.mode.__eq__(player_types["q"]):
-        move = game.qagent.make_a_move(PokerEnv.encode(p.hand, 1, p.bank, game.bank))
+def big_blind(p, game, neural_model_npc=None, q_table_npc=None):
+    if p.bank == 0:
+        print(p.name + " can't fold - no money left to play next hand")
+        move = 1
     else:
-        pass
+        if p.mode.__eq__(player_types["h"]):
+            retry = True
+            while retry:
+                inp = input("Do you want to (F)old or (C)all?").lower()
+                if inp == "f":
+                    move = False
+                elif inp == "c":
+                    retry = False
+            game.render_game()
+        elif p.mode.__eq__(player_types["r"]):
+            move = RandomNPC.make_a_move()
+        elif p.mode.__eq__(player_types["q"]):
+            move = q_table_npc.make_a_move(PokerEnv.encode(p.hand, 1, p.bank, game.bank))
+        elif p.mode.__eq__(player_types["n"]):
+            hole_cards = p.hand.cards[0:2]
+            community_cards = p.hand.cards[2:]
+            small_blind = 0
+            num_of_chips = p.bank
+            initial_num_of_chips = game.bank
+            state, _ = encode_to_vector(hole_cards, community_cards, small_blind, num_of_chips,
+                                        initial_num_of_chips)
+            move = neural_model_npc.make_a_move(state)
+        else:
+            pass
     if not move:
         print(p.name, "folds")
         return False
@@ -95,28 +125,44 @@ def resolve_hands(p, g):
         g.split_the_pot()
     else:
         print(p[winners[0]].name, "has taken the pot")
+        print(p[winners[0]].name, "gained", min(p[winners[0]].bet * 2, g.pot))
         g.player_won(p[winners[0]])
 
 
-def main():
+def main(p1, p2, num_of_games,num_of_chips):
     # [0] player1 won accumulator, [1] player2 won accumulator
     stats = [0, 0]
-    for games in range(1000):
+    game_length = [0]
+    if "n" in [p1, p2]:
+        neural_npc = NeuralNetworkNPC()
+    else:
+        neural_npc = None
+    if "q" in [p1, p2]:
+        q_table_npc = QtableNPC()
+    else:
+        q_table_npc = None
+    for games in range(num_of_games):
         # q - indicate q-table, indicate
-        game = Game("Tegra", player_types["q"], "Firluk", player_types["r"])
+        game = Game(player_types[p1], player_types[p1], player_types[p2], player_types[p2],bank=num_of_chips)
+        if random() > 0.5:
+            game.end_round()
         while not game.done:
             if game.a_player().bank <= 0 or game.na_player().bank <= 0:
                 game.done = True
                 break
             else:
+                game.render_game()
+                print(game.p[game.turn].name + " is small blind")
+                print("Placing blinds")
                 game.place_blinds()
+                game.render_game()
             game.players_draw_cards()
-            game.render_game()
-            print(game.p[game.turn].name + " is small blind")
-            result = small_blind(game.p[game.turn], game)
+            result = small_blind(game.p[game.turn], game, neural_model_npc=neural_npc, q_table_npc=q_table_npc)
             game.next_player()
             if result:
-                result = big_blind(game.p[game.turn], game)
+                result = big_blind(game.p[game.turn], game, neural_model_npc=neural_npc, q_table_npc=q_table_npc)
+                if game.bb_player().bank <= 0:
+                    result = True
                 if result:
                     resolve_hands(game.p, game)
                 else:
@@ -124,6 +170,7 @@ def main():
             else:
                 game.opponent_folded(game.a_player())
             game.new_step()
+            print()
 
         # region End game
         if game.done:
@@ -141,12 +188,30 @@ def main():
             s = pl.name + " has won the game with "
             s += str(pl.bank) + " coins"
             print(s)
-
+        print()
+        print()
         # endregion
         print(stats)
-    print("In total: Player1 has won " + str(stats[0]))
-    print("In total: Player2 has won " + str(stats[1]))
+    print("In total: Player1[" + player_types[p1] + "] has won " + str(stats[0]))
+    print("In total: Player2[" + player_types[p2] + "] has won " + str(stats[1]))
 
 
 if __name__ == "__main__":
-    main()
+    # args - player1 , player2
+    # allow to play versus neural net's q-table
+    # allow to play versus q-learning q-table
+    # allow to play versus random
+    # allow to play as human
+    # args - [h/r/n/q] [h/r/n/q] [number of games]
+    if len(sys.argv) > 1:
+        p1_arg = sys.argv[1]
+        p2_arg = sys.argv[2]
+        num_of_games_arg = int(sys.argv[3])
+    else:
+        print("Usage: [h/r/n/q] [h/r/n/q] [number of games]")
+        print("h - human | r - random | n-neural network | q - q-learning q-table")
+        print("Using default run configurations: p1 - r, p2 - n, number of games - 100")
+        p1_arg = "r"
+        p2_arg = "n"
+        num_of_games_arg = 100
+    main(p1=p1_arg, p2=p2_arg, num_of_games=num_of_games_arg)
