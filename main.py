@@ -130,6 +130,8 @@ def resolve_hands(p, g):
 
 
 def main(p1, p2, num_of_games, num_of_chips):
+    import time
+    start_time = time.time()
     # [0] player1 won accumulator, [1] player2 won accumulator
     stats = [0, 0]
     game_length = [0]
@@ -193,6 +195,7 @@ def main(p1, p2, num_of_games, num_of_chips):
         print(stats)
     print("In total: Player1[" + player_types[p1] + "] has won " + str(stats[0]))
     print("In total: Player2[" + player_types[p2] + "] has won " + str(stats[1]))
+    print("time elapsed: {:.2f}s".format(time.time() - start_time))
 
 
 if __name__ == "__main__":
@@ -201,14 +204,14 @@ if __name__ == "__main__":
     # allow to play versus q-learning q-table
     # allow to play versus random
     # allow to play as human
-    # args - [h/r/n/q] [h/r/n/q] [number of games]
+    # args - [h/r/n/q] [h/r/n/q] [number of games] [number of chips]
     if len(sys.argv) > 1:
         p1_arg = sys.argv[1]
         p2_arg = sys.argv[2]
         num_of_games_arg = int(sys.argv[3])
-        num_of_chips_arg = int(sys.argv[3])
+        num_of_chips_arg = int(sys.argv[4])
     else:
-        print("Usage: [h/r/n/q] [h/r/n/q] [number of games]")
+        print("Usage: [h/r/n/q] [h/r/n/q] [number of games] [number of chips]")
         print("h - human | r - random | n-neural network | q - q-learning q-table")
         print("Using default run configurations: p1 - r, p2 - n, number of games - 100")
         p1_arg = "r"
