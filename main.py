@@ -1,3 +1,4 @@
+import copy
 import sys
 from random import random
 
@@ -134,7 +135,11 @@ def main(p1, p2, num_of_games, num_of_chips):
     start_time = time.time()
     # [0] player1 won accumulator, [1] player2 won accumulator
     stats = [0, 0]
-    game_length = [0]
+    game_lengths_won_by_p1 = [0]
+    game_lengths_won_by_p2 = [0]
+    #  successful bluff is when p1 is when SB goes all-in, and opponent folds, but would have won if called
+    bluffs_p1 = [0, 0]
+    bluffs_p2 = [0, 0]
     if "n" in [p1, p2]:
         neural_npc = NeuralNetworkNPC()
     else:
@@ -148,6 +153,7 @@ def main(p1, p2, num_of_games, num_of_chips):
         game = Game(player_types[p1], player_types[p1], player_types[p2], player_types[p2], bank=num_of_chips)
         if random() > 0.5:
             game.end_round()
+        game_length = 0
         while not game.done:
             if game.a_player().bank <= 0 or game.na_player().bank <= 0:
                 game.done = True
@@ -159,27 +165,46 @@ def main(p1, p2, num_of_games, num_of_chips):
                 game.place_blinds()
                 game.render_game()
             game.players_draw_cards()
+            current_player_index = game.turn
             result = small_blind(game.p[game.turn], game, neural_model_npc=neural_npc, q_table_npc=q_table_npc)
             game.next_player()
             if result:
                 result = big_blind(game.p[game.turn], game, neural_model_npc=neural_npc, q_table_npc=q_table_npc)
-                if game.bb_player().bank <= 0:
-                    result = True
                 if result:
                     resolve_hands(game.p, game)
                 else:
+                    # bluff?
+                    results = []
+                    community_cards = []
+                    for i in range(5):
+                        community_cards.append(game.deck.draw_card())
+                    for ep in game.p:
+                        hand = copy.deepcopy(ep.hand)
+                        hand.cards.extend(community_cards)
+                        hand.sort()
+                        results.append(Game.score(hand))
+                    # select the winner
+                    winners = Game.determine_winner(results)
+                    if winners[0] == current_player_index:
+                        if current_player_index == 0:
+                            bluffs_p1[0] += 1
+                        else:
+                            bluffs_p2[0] += 1
                     game.opponent_folded(game.na_player())
             else:
                 game.opponent_folded(game.a_player())
             game.new_step()
             print()
+            game_length += 1
 
         # region End game
         if game.done:
             if game.p[0].bank > game.p[1].bank:
                 stats[0] += 1
+                game_lengths_won_by_p1.append(game_length)
             else:
                 stats[1] += 1
+                game_lengths_won_by_p2.append(game_length)
             for pl in game.p:
                 pl.bank += pl.bet
                 pl.bet = 0
@@ -189,12 +214,21 @@ def main(p1, p2, num_of_games, num_of_chips):
                 pl = game.a_player()
             s = pl.name + " has won the game with "
             s += str(pl.bank) + " coins"
+
             print(s)
         print('\n')
         # endregion
         print(stats)
     print("In total: Player1[" + player_types[p1] + "] has won " + str(stats[0]))
     print("In total: Player2[" + player_types[p2] + "] has won " + str(stats[1]))
+    if len(game_lengths_won_by_p1) > 1:
+        print("Average game length when Player1[" + player_types[p1] + "] has won "
+              + str(round(sum(game_lengths_won_by_p1) / len(game_lengths_won_by_p1), 2)))
+    if len(game_lengths_won_by_p2) > 1:
+        print("Average game length when Player2[" + player_types[p2] + "] has won "
+              + str(round(sum(game_lengths_won_by_p2) / len(game_lengths_won_by_p2), 2)))
+    print("Successful bluffs by Player1[" + player_types[p1] + "] " + str(bluffs_p1[0]))
+    print("Successful bluffs by Player2[" + player_types[p2] + "] " + str(bluffs_p2[0]))
     print("time elapsed: {:.2f}s".format(time.time() - start_time))
 
 
