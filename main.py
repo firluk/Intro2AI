@@ -190,6 +190,10 @@ def main(p1, p2, num_of_games, num_of_chips):
                             bluffs_p1[0] += 1
                         else:
                             bluffs_p2[0] += 1
+                    if current_player_index == 0:
+                        bluffs_p1[1] += 1
+                    else:
+                        bluffs_p2[1] += 1
                     game.opponent_folded(game.na_player())
             else:
                 game.opponent_folded(game.a_player())
@@ -227,8 +231,14 @@ def main(p1, p2, num_of_games, num_of_chips):
     if len(game_lengths_won_by_p2) > 1:
         print("Average game length when Player2[" + player_types[p2] + "] has won "
               + str(round(sum(game_lengths_won_by_p2) / len(game_lengths_won_by_p2), 2)))
-    print("Successful bluffs by Player1[" + player_types[p1] + "] " + str(bluffs_p1[0]))
-    print("Successful bluffs by Player2[" + player_types[p2] + "] " + str(bluffs_p2[0]))
+    print("Successful bluffs by Player1[" + player_types[p1] + "] "
+          + str(bluffs_p1[0])
+          + " / "
+          + str(bluffs_p1[1]))
+    print("Successful bluffs by Player2[" + player_types[p2] + "] "
+          + str(bluffs_p2[0])
+          + " / "
+          + str(bluffs_p2[1]))
     print("time elapsed: {:.2f}s".format(time.time() - start_time))
 
 
