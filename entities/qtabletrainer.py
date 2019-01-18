@@ -30,7 +30,7 @@ class QTableTrainer:
         self.nc = num_of_chips
 
     def train_agent(self, ca=52):
-        alpha = 0.01
+        alpha = 0.5
         epsilon = 0.5
         lbda = 0.1
         tmr1 = time.time()
@@ -315,6 +315,7 @@ class QTableTrainer:
         # endregion
 
         # region Exploration vs exploitation
+
         env = PokerEnv(self.nc, 0)
         cycles = 300000  # int(52 * 52 * np.math.log(52 * 52) * 1000)
         pulse = cycles // 20
@@ -363,8 +364,9 @@ class QTableTrainer:
                     seconds_left = int(seconds_left % 60)
                     print("Estimated time to completion: {0:d}:{1:02d}".format(minutes_left, seconds_left))
                 tmr2 = tmr1
-                print_q_table_to_file(self.nc, table=self.agent.qt, verbose=False,
-                                      filename=".\Qtable\Q_table_dump" + str(i + 1) + ".txt")
+                if i % (pulse * 6) == 0:
+                    print_q_table_to_file(self.nc, table=self.agent.qt, verbose=False,
+                                          filename=".\Qtable\Q_table_dump" + str(i + 1) + ".txt")
             env.reset(self.nc)
 
         # endregion
