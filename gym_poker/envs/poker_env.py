@@ -14,9 +14,9 @@ class PokerEnv(gym.Env):
         self.dc = deal_cards
         self.rc = randomize_chips
         self.ob = self.reset(num_of_chips)
-        self.fld_pen = 70
+        self.fld_pen = 50
         self.win_rew = 100
-        self.los_pen = 35
+        self.los_pen = 0
         self.tot_los_pen = 0
         self.tot_win_rew = 100
 
