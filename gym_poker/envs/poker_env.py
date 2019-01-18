@@ -34,10 +34,10 @@ class PokerEnv(gym.Env):
          """
         sb_player = self.gm.sb_player()
         bb_player = self.gm.bb_player()
-        if action[0]:
+        if action[0] == 1:
             # Small blind went all in
             self.gm.player_all_in(sb_player)
-            if action[1]:
+            if action[1] == 1:
                 # BB called
                 self.gm.player_call(bb_player, sb_player.bet)
                 # Need to compare hands

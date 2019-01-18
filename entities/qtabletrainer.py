@@ -174,7 +174,7 @@ class QTableTrainer:
         # region Against Random
         """
         env = PokerEnv(self.nc, 0, True, 1)
-        cycles = 600000  # int(52 * 52 * np.math.log(52 * 52) * 1000)
+        cycles = 500000  # int(52 * 52 * np.math.log(52 * 52) * 1000)
         pulse = cycles // 20
         for i in range(cycles):
             done = False
@@ -213,17 +213,16 @@ class QTableTrainer:
                     seconds_left = int(seconds_left % 60)
                     print("Estimated time to completion: {0:d}:{1:02d}".format(minutes_left, seconds_left))
                 tmr2 = tmr1
-                if i % (pulse * 10) == 0:
+                if i % (pulse * 21) == 0:
                     print_q_table_to_file(self.nc, table=self.agent.qt, verbose=False,
                                           filename=".\Qtable\Q_table_dump" + str(i) + ".txt")
             env.reset(self.nc)
         """
         # endregion
 
-        # region Some exploration
-        """
-        env = PokerEnv(self.nc, 0, True, 0.4)
-        cycles = 20000  # int(52 * 52 * np.math.log(52 * 52) * 1000)
+        # region Against all in
+        env = PokerEnv(self.nc, 0, True, 1)
+        cycles = 1000000  # int(52 * 52 * np.math.log(52 * 52) * 1000)
         pulse = cycles // 20
         for i in range(cycles):
             done = False
@@ -233,16 +232,12 @@ class QTableTrainer:
                 p1_state = PokerEnv.encode(player1.hand, 0, player1.bank, self.nc)
                 p2_state = PokerEnv.encode(player2.hand, 1, player2.bank, self.nc)
 
-                # exploitation vs exploration
-
-                if random() < epsilon:
-                    action1 = 0 if random() > 0.5 else 1
+                if i % 2 == 0:
+                    action1 = self.agent.make_a_move(PokerEnv.encode(player1.hand, 0, player1.bank, self.nc))
+                    action2 = 1
                 else:
-                    action1 = self.agent.make_a_move(p1_state)
-                if random() < epsilon:
-                    action2 = 0 if random() > 0.5 else 1
-                else:
-                    action2 = self.agent.make_a_move(p2_state)
+                    action1 = 1
+                    action2 = self.agent.make_a_move(PokerEnv.encode(player2.hand, 1, player2.bank, self.nc))
 
                 observation, rewards, done = env.step([action1, action2])
                 p1_reward, p2_reward = rewards[0], rewards[1]
@@ -265,10 +260,10 @@ class QTableTrainer:
                     seconds_left = int(seconds_left % 60)
                     print("Estimated time to completion: {0:d}:{1:02d}".format(minutes_left, seconds_left))
                 tmr2 = tmr1
-                print_q_table_to_file(self.nc, table=self.agent.qt, verbose=False,
-                                      filename=".\Qtable\Q_table_dump" + str(i + 1) + ".txt")
+                if i % (pulse * 21) == 0:
+                    print_q_table_to_file(self.nc, table=self.agent.qt, verbose=False,
+                                          filename=".\Qtable\Q_table_dump" + str(i) + ".txt")
             env.reset(self.nc)
-        """
         # endregion
 
         # region No exploration
@@ -314,8 +309,8 @@ class QTableTrainer:
         """
         # endregion
 
-        # region Exploration vs exploitation
-
+        # region MDP - Exploration vs exploitation
+        """
         env = PokerEnv(self.nc, 0)
         cycles = 300000  # int(52 * 52 * np.math.log(52 * 52) * 1000)
         pulse = cycles // 20
@@ -368,7 +363,7 @@ class QTableTrainer:
                     print_q_table_to_file(self.nc, table=self.agent.qt, verbose=False,
                                           filename=".\Qtable\Q_table_dump" + str(i + 1) + ".txt")
             env.reset(self.nc)
-
+        """
         # endregion
 
         print_q_table_to_file(self.nc, table=self.agent.qt, verbose=False, filename=".\Qtable\Q_table_dump_end.txt")
