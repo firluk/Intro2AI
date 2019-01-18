@@ -25,13 +25,15 @@ class NeuralNetworkTrainer:
         # future reward factor
         gamma = 0.5
 
+        all_rewards = [0, 0]
+
         for i in range(1, total_episodes + 1):
             s = env.reset(self.nc, rand_bank_dist=True)
 
             # saving the model for keras and saving q-table like results in readable format
             if save_every and (i % save_every == 0 or i == 1):
                 print("Episode {} of {}".format(i, total_episodes))
-                save_poker_model(self.model, i)
+                save_poker_model(self.model, all_rewards)
 
             # episode flags
             done = False
@@ -69,6 +71,8 @@ class NeuralNetworkTrainer:
                 # reward for both players
                 reward1 = r[0]
                 reward2 = r[1]
+                all_rewards[0] += reward1 + reward2
+                all_rewards[1] += 2
 
                 # predicted future reward
                 next_reward1 = np.zeros((2,))

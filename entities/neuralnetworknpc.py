@@ -64,9 +64,12 @@ def load_poker_model():
     return load_model('./NeuralNet/my_model.h5')
 
 
-def save_poker_model(model, i="_end"):
+def save_poker_model(model, all_rewards):
     """ Saving keras model for future use """
     save_model(model, './NeuralNet/my_model.h5')
+    with open("./NeuralNet/rewards_avg.txt", 'w', encoding='utf8') as outfile:
+        if all_rewards[1] > 0:
+            outfile.write(str(round(all_rewards[0] / all_rewards[1], 2)))
 
 
 def print_neural_network_predictions(model=None, filename=None, verbose=False, money_bins=4):

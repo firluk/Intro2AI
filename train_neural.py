@@ -30,4 +30,4 @@ if __name__ == "__main__":
     train_neural_network(save_every=save_every_arg,
                          num_of_chips=num_of_chips_arg,
                          total_episodes=total_episodes_arg)
-    print_neural_network_predictions(filename=filename, verbose=True)
+    print_neural_network_predictions(filename=filename, verbose=False)
