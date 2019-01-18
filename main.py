@@ -206,6 +206,7 @@ if __name__ == "__main__":
         p1_arg = sys.argv[1]
         p2_arg = sys.argv[2]
         num_of_games_arg = int(sys.argv[3])
+        num_of_chips_arg = int(sys.argv[3])
     else:
         print("Usage: [h/r/n/q] [h/r/n/q] [number of games]")
         print("h - human | r - random | n-neural network | q - q-learning q-table")
@@ -213,4 +214,5 @@ if __name__ == "__main__":
         p1_arg = "r"
         p2_arg = "n"
         num_of_games_arg = 100
-    main(p1=p1_arg, p2=p2_arg, num_of_games=num_of_games_arg)
+        num_of_chips_arg = 20
+    main(p1=p1_arg, p2=p2_arg, num_of_games=num_of_games_arg, num_of_chips=num_of_chips_arg)
