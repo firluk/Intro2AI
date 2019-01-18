@@ -66,9 +66,7 @@ def load_poker_model():
 
 def save_poker_model(model, i="_end"):
     """ Saving keras model for future use """
-    save_model(model, './NeuralNet/my_model' + str(i) + '.h5')
     save_model(model, './NeuralNet/my_model.h5')
-    print_neural_network_predictions(model, './NeuralNet/Q_my_model' + str(i) + ".txt")
 
 
 def print_neural_network_predictions(model=None, filename=None, verbose=False, money_bins=4):
