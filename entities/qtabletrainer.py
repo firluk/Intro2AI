@@ -9,9 +9,9 @@ from entities.qtablenpc import QtableNPC
 from gym_poker.envs.poker_env import PokerEnv, Card
 
 
-def calc_new_value(alpha, old_value, reward, lmbda, next_max, done):
+def calc_new_value(alpha, old_value, reward, gamma, next_max, done):
     if not done:
-        return (1 - alpha) * old_value + alpha * (reward + lmbda * next_max)
+        return (1 - alpha) * old_value + alpha * (reward + gamma * next_max)
     else:
         return ((1 - alpha) * old_value) + (alpha * reward)
 

@@ -28,7 +28,7 @@ class NeuralNetPokerEnv(gym.Env):
         neutral_grade = 0
         sb_chips = 1
         bb_chips = 2
-        bankrupt_qualifier = 1.1
+        bankrupt_qualifier = 1.0
 
         sb_player: Player = self._g.sb_player()
         bb_player: Player = self._g.bb_player()
@@ -76,9 +76,8 @@ class NeuralNetPokerEnv(gym.Env):
                 elif bb_player.bank == 0:
                     rewards = [bankrupt_qualifier * pot, -bankrupt_qualifier * pot]
                 else:
-                    gain = min(pot, self._g.p[winners[0]].bet * 2)
-                    rewards.insert(winners[0], gain)
-                    rewards.insert(1 - winners[0], -gain)
+                    rewards.insert(winners[0], pot)
+                    rewards.insert(1 - winners[0], -pot)
             done = True
             next_state = None
         # due to simplicity of our game model immediate alternative is having 2 cards in the hand
